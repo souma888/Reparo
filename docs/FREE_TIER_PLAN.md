@@ -25,6 +25,8 @@ Verified against official documentation on 8 November 2026. Target: $0 recurring
 
 ## Implemented controls
 
+Camera identification now uses `/api/vision` with the same free Google key. Live analysis is opt-in sampled frames, not continuous video: five scans per visual session, no overlapping calls, and a ten-second pause after each response. Vision output is capped at 1,300 tokens and has no paid fallback; its instance/IP allowance is twenty scans/hour. Identification failure offers manual entry, never a guessed device. Fixed owner-level repair guides add no provider calls. Camera and microphone permissions are separately controlled; the microphone remains blocked.
+
 Local appliance editing, recurring care dates, completion records, and calendar-file exports add no cloud service. JSON backup/import transfers records manually between devices without an account. Files are limited to 2 MB, validated, and merged without replacing existing IDs. Backups contain private, unencrypted text. Calendar export is one event and does not auto-sync or guarantee a notification.
 
 1. Direct Google provider object, not a bare AI SDK model string that implicitly uses Vercel AI Gateway. Legacy Gateway/OIDC credentials are ignored for inference.

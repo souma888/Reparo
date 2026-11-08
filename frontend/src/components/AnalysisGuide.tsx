@@ -10,15 +10,20 @@ import {
 } from "../../../shared/analysis";
 import { downloadText, summary, type Workshop } from "../workshop";
 import { Icon } from "./Icon";
+import { RepairGuide } from "./RepairGuide";
 
 export function AnalysisGuide({
   initialAppliance,
   initialModel,
+  initialPhoto = "",
+  initialIssue = "",
   onClose,
   workshop,
 }: {
   initialAppliance: string;
   initialModel: string;
+  initialPhoto?: string;
+  initialIssue?: string;
   onClose: () => void;
   workshop: Workshop;
 }) {
@@ -26,13 +31,14 @@ export function AnalysisGuide({
     appliance: initialAppliance as AnalysisRequest["appliance"],
     symptom: "",
     safety: "unsure",
-    notes: "",
+    notes: initialIssue,
     model: initialModel,
     answers: {},
     consent: true,
     mode: "ai",
+    photo: initialPhoto || undefined,
   });
-  const [step, setStep] = useState(0),
+  const [step, setStep] = useState(initialPhoto ? 1 : 0),
     [safetyAnswered, setSafetyAnswered] = useState(false),
     [consent, setConsent] = useState(false),
     [saveConsent, setSaveConsent] = useState(false),
@@ -242,6 +248,16 @@ export function AnalysisGuide({
           ) : null}
           {step === 1 ? (
             <>
+              {initialPhoto ? (
+                <p className="repair-photo-note">
+                  Camera frame attached. Confirm safety first; then describe the
+                  symptom for the identified{" "}
+                  {appliances
+                    .find((a) => a.id === input.appliance)
+                    ?.name.toLowerCase()}
+                  .
+                </p>
+              ) : null}
               <p>
                 Have you noticed smoke, burning, sparks, electric shock, a gas
                 or refrigerant leak, exposed wiring, or water near electricity?
@@ -435,6 +451,11 @@ export function AnalysisGuide({
                   </details>
                 ) : null}
               </div>
+              <RepairGuide
+                key={`${input.appliance}-${result.mode}`}
+                appliance={input.appliance}
+                stopped={result.stop}
+              />
               {!result.stop && result.questions.length ? (
                 <fieldset className="followups">
                   <legend>Clarify with existing observations</legend>

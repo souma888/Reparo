@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { appliances } from "./diagnostics";
-import { ApplianceDrawing } from "./components/ApplianceDrawing";
+import { CameraWorkbench } from "./components/CameraWorkbench";
 import { Icon } from "./components/Icon";
 import { AnalysisGuide } from "./components/AnalysisGuide";
 import { Workspace } from "./components/Workspace";
@@ -9,15 +9,15 @@ import { useWorkshop } from "./workshop";
 const questions = [
   [
     "What can I try today?",
-    "Choose an appliance, complete the safety check, and send symptoms or an exterior photo for AI-assisted analysis. Results distinguish observations, unverified possible explanations, unknowns, and safe next steps.",
+    "Start with a camera frame or uploaded image. AI identifies the visible appliance; you confirm it, answer safety and symptom questions, and receive observations, possible causes, and supported external repair guides.",
   ],
   [
     "Will Reparo tell me how to repair an appliance?",
-    "The focus is understanding symptoms and finding safe next steps. Reparo will not guide hazardous electrical, gas, refrigerant, or microwave repairs. A qualified technician should handle internal repairs.",
+    "You can follow interactive guides for a few confirmed owner-level issues, such as an item blocking a refrigerator door. The guide requires you to confirm the condition and check your model manual. Hazardous electrical, gas, refrigerant, microwave, or internal repairs require a qualified technician.",
   ],
   [
-    "Can I upload a photo or an audio clip?",
-    "You can include an exterior JPEG, PNG, or WebP photo. It is resized and metadata is removed before it is sent with your consent to the AI service. Audio and video analysis are not available yet.",
+    "Can I use my camera or a live feed?",
+    "Yes. Open the live camera, take a photo on your phone, or upload an image. Live analysis sends separate snapshots with your consent, up to five scans per visual session. It does not stream video continuously to AI. Audio analysis is not available yet.",
   ],
   [
     "Are my answers stored?",
@@ -29,11 +29,25 @@ export default function App() {
   const workshop = useWorkshop();
   const [guide, setGuide] = useState<string | null>(null);
   const [guideModel, setGuideModel] = useState("");
+  const [guidePhoto, setGuidePhoto] = useState(""),
+    [guideIssue, setGuideIssue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const openGuide = (id = "washer", model = "") => {
     setMenuOpen(false);
     setGuide(id);
     setGuideModel(model);
+    setGuidePhoto("");
+    setGuideIssue("");
+  };
+  const visualGuide = (
+    id: string,
+    model: string,
+    photo: string,
+    issue: string,
+  ) => {
+    openGuide(id, model);
+    setGuidePhoto(photo);
+    setGuideIssue(issue);
   };
   return (
     <>
@@ -59,8 +73,8 @@ export default function App() {
           className={menuOpen ? "nav-open" : ""}
           aria-label="Main navigation"
         >
-          <a href="#approach" onClick={() => setMenuOpen(false)}>
-            Our approach
+          <a href="#camera" onClick={() => setMenuOpen(false)}>
+            Camera repair
           </a>
           <a href="#appliances" onClick={() => setMenuOpen(false)}>
             Appliances
@@ -71,62 +85,17 @@ export default function App() {
           <a href="#workspace" onClick={() => setMenuOpen(false)}>
             My workspace
           </a>
-          <button className="nav-cta" onClick={() => openGuide()}>
-            Try the guide <Icon name="arrow" size={18} />
-          </button>
+          <a
+            className="nav-cta"
+            href="#camera"
+            onClick={() => setMenuOpen(false)}
+          >
+            Scan your appliance <Icon name="camera" size={18} />
+          </a>
         </nav>
       </header>
       <main id="main">
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <div className="eyebrow">
-              <span className="small-line" /> THOUGHTFUL CARE. EVERYDAY
-              APPLIANCES.
-            </div>
-            <h1 id="hero-title">
-              A little clarity.
-              <br />A longer <em>life.</em>
-            </h1>
-            <p>
-              When something doesn’t feel right, start with understanding. A
-              considered approach to caring for the appliances you live with.
-            </p>
-            <button className="button dark" onClick={() => openGuide()}>
-              Find your starting point <Icon name="arrow" size={20} />
-            </button>
-            <div className="hero-assurance">
-              <Icon name="shield" size={17} />
-              <span>Safety first. Always.</span>
-              <span className="dot" />
-              <span>AI-assisted understanding</span>
-            </div>
-          </div>
-          <div className="hero-art">
-            <div className="art-top">
-              <span>THE EVERYDAY, RECONSIDERED.</span>
-              <span>NO. 001</span>
-            </div>
-            <div className="art-grid" />
-            <ApplianceDrawing />
-            <div className="art-bottom">
-              <span className="art-caption">
-                Worth understanding.
-                <br />
-                <em>Worth keeping.</em>
-              </span>
-              <span className="art-stamp">
-                <Icon name="spark" size={20} /> CARE OVER
-                <br /> REPLACEMENT
-              </span>
-            </div>
-          </div>
-          <div className="hero-footer">
-            <span>A MORE CONSIDERED WAY FORWARD</span>
-            <a href="#approach">
-              Get to know Reparo <span>↓</span>
-            </a>
-          </div>
-        </section>
+        <CameraWorkbench onGuide={visualGuide} onManual={() => openGuide()} />
         <section className="principles" aria-label="Our principles">
           <div>
             <Icon name="shield" />
@@ -305,6 +274,8 @@ export default function App() {
         <AnalysisGuide
           initialAppliance={guide}
           initialModel={guideModel}
+          initialPhoto={guidePhoto}
+          initialIssue={guideIssue}
           onClose={() => setGuide(null)}
           workshop={workshop}
         />

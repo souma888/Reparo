@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 export type IconName =
+  | "camera"
   | "arrow"
   | "shield"
   | "spark"
@@ -13,6 +14,12 @@ export type IconName =
   | "plus";
 
 const paths: Record<IconName, ReactNode> = {
+  camera: (
+    <>
+      <path d="M3 7h4l2-3h6l2 3h4v13H3V7Z" />
+      <circle cx="12" cy="13" r="4" />
+    </>
+  ),
   arrow: (
     <>
       <path d="M4 12h16m-6-6 6 6-6 6" />

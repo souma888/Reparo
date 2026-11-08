@@ -1,10 +1,11 @@
 import { createServer } from "node:http";
 import endpoint from "../api/analyze";
+import visionEndpoint from "../api/vision";
 
 // Local companion to Vite: node --env-file-if-exists=.env.local --experimental-strip-types
 // is not used because Node requires extensionful imports. Run through tsx instead.
 createServer(async (req, res) => {
-  if (req.url !== "/api/analyze") {
+  if (req.url !== "/api/analyze" && req.url !== "/api/vision") {
     res.writeHead(404).end();
     return;
   }
@@ -27,7 +28,9 @@ createServer(async (req, res) => {
           : undefined,
       ...{ duplex: "half" },
     });
-    const response = await endpoint.fetch(request);
+    const response = await (
+      req.url === "/api/vision" ? visionEndpoint : endpoint
+    ).fetch(request);
     res.writeHead(response.status, Object.fromEntries(response.headers));
     res.end(Buffer.from(await response.arrayBuffer()));
   } catch {
