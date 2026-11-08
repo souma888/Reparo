@@ -25,6 +25,8 @@ Verified against official documentation on 8 November 2026. Target: $0 recurring
 
 ## Implemented controls
 
+Local appliance editing, recurring care dates, completion records, and calendar-file exports add no cloud service. JSON backup/import transfers records manually between devices without an account. Files are limited to 2 MB, validated, and merged without replacing existing IDs. Backups contain private, unencrypted text. Calendar export is one event and does not auto-sync or guarantee a notification.
+
 1. Direct Google provider object, not a bare AI SDK model string that implicitly uses Vercel AI Gateway. Legacy Gateway/OIDC credentials are ignored for inference.
 2. One fixed free-eligible model; no premium-model environment override or cross-provider fallback. No paid grounding/tools, managed files, embeddings, background loops, or retries.
 3. One call per analysis, 25-second model timeout, 1,800 output-token cap, three attempts per open guide. Reopening resets the client counter: it is a convenience limit, not authentication.

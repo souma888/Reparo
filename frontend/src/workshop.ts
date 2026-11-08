@@ -1,48 +1,19 @@
-import { useState } from "react";
-import { z } from "zod";
+import { useState, useEffect } from "react";
 import {
-  aiSchema,
-  type Analysis,
-  type AnalysisRequest,
-} from "../../shared/analysis";
-const analysisSchema = aiSchema.extend({
-  stop: z.boolean(),
-  mode: z.enum(["ai", "safety", "rules"]),
-  notice: z.string().optional(),
-  checks: z.array(z.string()),
-  version: z.string(),
-  model: z.string().optional(),
-});
-const caseSchema = z.object({
-  id: z.string(),
-  date: z.string(),
-  appliance: z.enum(["washer", "fridge", "fan", "small"]),
-  model: z.string(),
-  symptom: z.string(),
-  notes: z.string(),
-  answers: z.record(z.string(), z.string()).default({}),
-  result: analysisSchema,
-  status: z.enum(["open", "resolved"]),
-  rating: z.enum(["helpful", "unclear"]).optional(),
-});
-const deviceSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1).max(80),
-  category: z.enum(["washer", "fridge", "fan", "small"]),
-  model: z.string().max(120),
-  careDate: z.string().max(10),
-});
-export type Case = z.infer<typeof caseSchema>;
-export type Device = z.infer<typeof deviceSchema>;
-const dataSchema = z.object({
-  version: z.literal(1),
-  cases: z.array(caseSchema).max(100),
-  devices: z.array(deviceSchema).max(50),
-});
+  dataSchema,
+  deviceSchema,
+  mergeBackup,
+  completeCare,
+  type WorkshopData,
+  type Device,
+  type Case,
+} from "./workshop-data";
+export type { Device, Case } from "./workshop-data";
+import { type Analysis, type AnalysisRequest } from "../../shared/analysis";
 const storageKey = "reparo-workshop-v1";
 export function useWorkshop() {
   const [error, setError] = useState("");
-  const [data, setData] = useState<z.infer<typeof dataSchema>>(() => {
+  const [data, setData] = useState<WorkshopData>(() => {
     try {
       return dataSchema.parse(
         JSON.parse(localStorage.getItem(storageKey) || "null"),
@@ -51,10 +22,36 @@ export function useWorkshop() {
       return { version: 1, cases: [], devices: [] };
     }
   });
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (event.key !== storageKey) return;
+      try {
+        setData(
+          event.newValue
+            ? dataSchema.parse(JSON.parse(event.newValue))
+            : { version: 1, cases: [], devices: [] },
+        );
+      } catch {
+        setError(
+          "Another tab contains invalid saved data. This tab kept its records.",
+        );
+      }
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
   function persist(next: typeof data) {
+    const parsed = dataSchema.safeParse(next);
+    if (!parsed.success) {
+      setError(
+        "Could not save: check the record details and the limits of 50 appliances and 100 cases. Existing records were preserved.",
+      );
+      return false;
+    }
     try {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-      setData(next);
+      const checked = parsed.data;
+      localStorage.setItem(storageKey, JSON.stringify(checked));
+      setData(checked);
       setError("");
       return true;
     } catch {
@@ -67,6 +64,28 @@ export function useWorkshop() {
   return {
     data,
     error,
+    importData: (incoming: WorkshopData) => {
+      try {
+        return persist(mergeBackup(data, incoming));
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "The backup could not be imported.",
+        );
+        return false;
+      }
+    },
+    updateDevice: (id: string, patch: Omit<Device, "id">) =>
+      persist({
+        ...data,
+        devices: data.devices.map((d) =>
+          d.id === id ? deviceSchema.parse({ ...patch, id }) : d,
+        ),
+      }),
+    completeCare: (id: string) =>
+      persist({
+        ...data,
+        devices: data.devices.map((d) => (d.id === id ? completeCare(d) : d)),
+      }),
     saveCase: (input: AnalysisRequest, result: Analysis) =>
       persist({
         ...data,
@@ -83,7 +102,7 @@ export function useWorkshop() {
             status: "open" as const,
           },
           ...data.cases,
-        ].slice(0, 100),
+        ],
       }),
     deleteCase: (id: string) =>
       persist({ ...data, cases: data.cases.filter((c) => c.id !== id) }),
@@ -95,20 +114,19 @@ export function useWorkshop() {
     addDevice: (device: Omit<Device, "id">) =>
       persist({
         ...data,
-        devices: [
-          ...data.devices,
-          { ...device, id: crypto.randomUUID() },
-        ].slice(-50),
+        devices: [...data.devices, { ...device, id: crypto.randomUUID() }],
       }),
     deleteDevice: (id: string) =>
       persist({ ...data, devices: data.devices.filter((d) => d.id !== id) }),
   };
 }
 export type Workshop = ReturnType<typeof useWorkshop>;
-export function downloadText(name: string, text: string) {
-  const url = URL.createObjectURL(
-    new Blob([text], { type: "text/plain;charset=utf-8" }),
-  );
+export function downloadText(
+  name: string,
+  text: string,
+  mime = "text/plain;charset=utf-8",
+) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime }));
   const link = document.createElement("a");
   link.href = url;
   link.download = name;

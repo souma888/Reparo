@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { appliances } from "../diagnostics";
 import { downloadText, summary, type Workshop, type Device } from "../workshop";
 import { Icon } from "./Icon";
+import { BackupPanel } from "./BackupPanel";
+import { calendarEvent, careStatus } from "../workshop-data";
 
 const manuals = [
   { name: "LG", url: "https://www.lg.com/us/support/manuals-documents" },
@@ -28,20 +30,42 @@ export function Workspace({
     careDate: "",
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const tabs = ["Overview", "My appliances", "Case history", "Care library"];
+  const [editing, setEditing] = useState<string | null>(null);
+  const tabs = [
+    "Overview",
+    "My appliances",
+    "Case history",
+    "Care library",
+    "Backup & data",
+  ];
+  const reminders = workshop.data.devices
+    .filter((d) => d.careDate)
+    .sort((a, b) => a.careDate.localeCompare(b.careDate));
   const cases = workshop.data.cases.filter(
     (c) =>
       (filter === "all" || c.status === filter) &&
-      `${c.appliance} ${c.model} ${c.symptom} ${c.notes}`
+      `${c.appliance} ${appliances.find((a) => a.id === c.appliance)?.name || ""} ${c.model} ${c.symptom} ${c.notes}`
         .toLowerCase()
         .includes(search.toLowerCase()),
   );
   function add(e: FormEvent) {
     e.preventDefault();
-    if (workshop.addDevice({ ...device, name: device.name.trim() })) {
+    const careDate = String(
+      new FormData(e.currentTarget as HTMLFormElement).get("careDate") || "",
+    );
+    if (
+      editing
+        ? workshop.updateDevice(editing, {
+            ...device,
+            careDate,
+            name: device.name.trim(),
+          })
+        : workshop.addDevice({ ...device, careDate, name: device.name.trim() })
+    ) {
       setAdding(false);
       setDevice({ name: "", category: "washer", model: "", careDate: "" });
       setDeviceConsent(false);
+      setEditing(null);
     }
   }
   return (
@@ -142,6 +166,64 @@ export function Workspace({
                 </span>
               </button>
             </div>
+            <div className="care-reminders">
+              <div className="panel-heading">
+                <div>
+                  <h3>Upcoming care</h3>
+                  <p>
+                    Your chosen dates, with no background service or
+                    notification fee.
+                  </p>
+                </div>
+                <button
+                  className="text-button"
+                  onClick={() => setTab("My appliances")}
+                >
+                  Manage care dates
+                </button>
+              </div>
+              {reminders.length ? (
+                <ul>
+                  {reminders.slice(0, 5).map((d) => (
+                    <li key={d.id}>
+                      <div>
+                        <strong>{d.name}</strong>
+                        <span>
+                          {d.careDate} · {careStatus(d)}
+                        </span>
+                      </div>
+                      <button
+                        className="text-button"
+                        onClick={() => workshop.completeCare(d.id)}
+                      >
+                        Mark care done
+                      </button>
+                      <button
+                        className="text-button"
+                        onClick={() =>
+                          downloadText(
+                            "reparo-care.ics",
+                            calendarEvent(d),
+                            "text/calendar;charset=utf-8",
+                          )
+                        }
+                      >
+                        Add to calendar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>
+                  No care dates yet. Set one while adding or editing an
+                  appliance.
+                </p>
+              )}
+              <p className="field-note">
+                Marking care done records your action; it does not certify
+                safety. Calendar exports are one event and do not auto-sync.
+              </p>
+            </div>
             <div className="workspace-welcome">
               <Icon name="spark" size={32} />
               <div>
@@ -164,7 +246,17 @@ export function Workspace({
               <p>Keep model details and your next care date in one place.</p>
               <button
                 className="text-button"
-                onClick={() => setAdding(!adding)}
+                onClick={() => {
+                  setAdding(!adding);
+                  setEditing(null);
+                  setDevice({
+                    name: "",
+                    category: "washer",
+                    model: "",
+                    careDate: "",
+                  });
+                  setDeviceConsent(false);
+                }}
               >
                 {adding ? "Cancel" : "Add appliance"}
                 <Icon name="plus" size={17} />
@@ -218,12 +310,35 @@ export function Workspace({
                   Next care date (optional)
                   <input
                     type="date"
+                    name="careDate"
                     value={device.careDate}
                     onChange={(e) =>
                       setDevice({ ...device, careDate: e.target.value })
                     }
                   />
                 </label>
+                <label>
+                  Repeat after care is done
+                  <select
+                    value={device.careIntervalDays || 0}
+                    onChange={(e) =>
+                      setDevice({
+                        ...device,
+                        careIntervalDays: Number(e.target.value),
+                      })
+                    }
+                  >
+                    <option value={0}>Do not repeat</option>
+                    <option value={30}>After 30 days</option>
+                    <option value={90}>After 90 days</option>
+                    <option value={180}>After 180 days</option>
+                    <option value={365}>After 365 days</option>
+                  </select>
+                </label>
+                <p className="field-note">
+                  Choose timing from your manufacturer manual. Reparo does not
+                  prescribe service intervals.
+                </p>
                 <label className="consent">
                   <input
                     type="checkbox"
@@ -233,7 +348,9 @@ export function Workspace({
                   />
                   Store these details on this browser.
                 </label>
-                <button className="button dark">Save appliance</button>
+                <button className="button dark">
+                  {editing ? "Save changes" : "Save appliance"}
+                </button>
               </form>
             ) : null}
             <div className="device-list">
@@ -248,7 +365,17 @@ export function Workspace({
                       <h3>{d.name}</h3>
                       <p>{d.model || "Model not added"}</p>
                       {d.careDate ? (
-                        <p>Care date: {d.careDate} · In-app reminder only</p>
+                        <p>
+                          Care date: {d.careDate} · {careStatus(d)}
+                        </p>
+                      ) : null}
+                      {d.lastCared ? (
+                        <p>Last care recorded: {d.lastCared}</p>
+                      ) : null}
+                      {d.careIntervalDays ? (
+                        <p>
+                          Repeats {d.careIntervalDays} days after completion
+                        </p>
                       ) : null}
                     </div>
                     <button
@@ -257,6 +384,32 @@ export function Workspace({
                     >
                       Troubleshoot
                     </button>
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setDevice({ ...d });
+                        setEditing(d.id);
+                        setAdding(true);
+                        setDeviceConsent(true);
+                        requestAnimationFrame(() =>
+                          document
+                            .querySelector<HTMLInputElement>(
+                              ".device-form input",
+                            )
+                            ?.focus(),
+                        );
+                      }}
+                    >
+                      Edit appliance
+                    </button>
+                    {d.careDate ? (
+                      <button
+                        className="text-button"
+                        onClick={() => workshop.completeCare(d.id)}
+                      >
+                        Mark care done
+                      </button>
+                    ) : null}
                     <button
                       className="icon-button"
                       aria-label={`Remove ${d.name}`}
@@ -327,6 +480,15 @@ export function Workspace({
                   </button>
                   {expanded === c.id ? (
                     <div className="case-body">
+                      {c.imported ? (
+                        <p className="field-note">
+                          Imported archive — not a fresh analysis. Its contents
+                          have not been verified by Reparo.
+                        </p>
+                      ) : null}
+                      {c.result.notice ? (
+                        <p className="field-note">{c.result.notice}</p>
+                      ) : null}
                       <p>{c.notes}</p>
                       {c.result.hypotheses.map((h) => (
                         <p key={h.title}>
@@ -476,6 +638,7 @@ export function Workspace({
             </div>
           </>
         ) : null}
+        {tab === "Backup & data" ? <BackupPanel workshop={workshop} /> : null}
       </div>
       {workshop.error ? (
         <p role="alert" className="error-message">

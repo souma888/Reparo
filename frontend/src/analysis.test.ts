@@ -59,6 +59,16 @@ describe("AI safety and validation", () => {
     expect(result.hypotheses).toHaveLength(1);
     expect(result.checks.join(" ")).toContain("Do not bypass");
   });
+  it("drops AI follow-ups that ask the user to operate the appliance", async () => {
+    const result = await analyze(input, async () => ({
+      ...generated,
+      questions: [
+        "Does pressing and holding the start button change the display?",
+        "What error code was already visible?",
+      ],
+    }));
+    expect(result.questions).toEqual(["What error code was already visible?"]);
+  });
   it("rejects absent consent and unsupported appliance", () => {
     expect(requestSchema.safeParse({ ...input, consent: false }).success).toBe(
       false,

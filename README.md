@@ -35,6 +35,8 @@ For a personal, non-commercial project, keep hosting on Vercel Hobby. AI calls G
 - Safe next actions from a fixed ruleset; model output never defines the action checklist.
 - Consent-based local case history: search/filter, expand, resolve/reopen, feedback, delete, and text export.
 - Local appliance records with brand/model and user-selected in-app care dates.
+- Edit appliances, choose recurring care intervals, record completed care, and export a single all-day calendar reminder. Calendar files do not auto-sync or guarantee notifications.
+- Download/import a validated JSON backup between devices. Imports preserve existing IDs and label imported analyses as unverified archives. Backups contain private text and are not encrypted.
 - Manufacturer support portal links and a care resource library.
 - Real loading, retry, timeout, validation, storage failure, and provider-unavailable states.
 
@@ -55,6 +57,8 @@ Cloud accounts and cross-device sync, audio/video analysis, verified manual retr
 - `frontend/src/components/AnalysisGuide.tsx`: intake, images, AI results, follow-ups.
 - `frontend/src/components/Workspace.tsx`: appliance records, history, resources.
 - `frontend/src/workshop.ts`: validated local records and exports.
+- `frontend/src/workshop-data.ts`: backup validation/merge and date/calendar utilities.
+- `frontend/src/components/BackupPanel.tsx`: local backup download and consent-based import.
 - `shared/analysis.ts`: request/result schemas, safety rules, approved checks.
 - `server/analyze.ts`: structured AI SDK integration.
 - `api/analyze.ts`: deployed HTTP endpoint and request limits.

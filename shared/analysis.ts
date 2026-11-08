@@ -110,6 +110,14 @@ export function finalize(
   if (mustStop(input) || ai.hazardDetected) return safetyResult();
   return {
     ...ai,
+    // Even interrogative phrasing can ask the user to operate a faulty device.
+    // Discard such follow-ups rather than relying only on the model prompt.
+    questions: ai.questions.filter(
+      (question) =>
+        !/(press|hold|push|run|operat|switch|turn|touch|plug|test|open|remov|disassembl|bypass|try|what happens if)/i.test(
+          question,
+        ),
+    ),
     stop: false,
     mode: "ai",
     checks: approvedChecks(input.appliance),
