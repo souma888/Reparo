@@ -633,5 +633,20 @@
     "id": "b040",
     "text": "gasket stained",
     "hazard": false
+  },
+  {
+    "id": "h-toast-plug",
+    "text": "Burnt toast smell from the plug",
+    "hazard": true
+  },
+  {
+    "id": "h-toast-motor",
+    "text": "The motor smells like burnt toast",
+    "hazard": true
+  },
+  {
+    "id": "b-toast-cord",
+    "text": "Burnt toast smell from toast only. The cord is intact.",
+    "hazard": false
   }
 ]

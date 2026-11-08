@@ -85,6 +85,13 @@ export const version = "reparo-safety-2026-11-08.2";
 // One gate for all entry points. Explicit safety answers can only escalate.
 export function hasHazard(text: string) {
   const normalized = text.normalize("NFKC").toLowerCase();
+  // A toast-like odor attributed to electrical equipment is still a hazard.
+  if (
+    /burn(?:t|ed) toast[^.!?\n]{0,60}(?:cord|wir(?:e|ing)|plug|socket|outlet|motor|breaker|panel)|(?:cord|wir(?:e|ing)|plug|socket|outlet|motor|breaker|panel)[^.!?\n]{0,60}burn(?:t|ed) toast/.test(
+      normalized,
+    )
+  )
+    return true;
   // A food-only burnt-toast report is a benign decoy, never an exemption for other hazards.
   const evidence = normalized.replace(
     /burn(?:t|ed) toast(?: smell)?/g,
