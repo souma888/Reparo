@@ -2,7 +2,7 @@ import { appliances } from "../diagnostics";
 import { Icon } from "./Icon";
 import { Receipt } from "./Receipt";
 import { recurringCases } from "../care-tools";
-import { careStatus } from "../workshop-data";
+import { careStatus, localDay } from "../workshop-data";
 import type { Device, Workshop } from "../workshop";
 export function DeviceCard({
   d,
@@ -29,9 +29,7 @@ export function DeviceCard({
         {d.warrantyExpiry ? (
           <p>
             Warranty: {d.warrantyExpiry}{" "}
-            {d.warrantyExpiry < new Date().toISOString().slice(0, 10)
-              ? "· Expired"
-              : ""}
+            {d.warrantyExpiry < localDay() ? "· Expired" : ""}
           </p>
         ) : null}
         <Receipt deviceId={d.id} />

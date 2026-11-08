@@ -109,7 +109,7 @@ export function mustStop(input: AnalysisRequest) {
 }
 // Reject procedural instructions in every generated field before displaying output.
 export function unsafeInstruction(text: string): boolean {
-  return /(?:^|[.!?]\s+)(?:please\s+)?(?:open|remove|unscrew|dismantle|disassemble|bypass|touch|probe|rewire|disconnect|plug|unplug|press|hold|push|run|operate|switch|turn|test)\s+(?:it|the|a|your|this|that)\b|पैनल खोल|खोलें|निकालें|चलाएँ|बायपास|(?:\b(?:please|you should|you can|you must|try to|need to)\s+)?\b(?:open|remove|unscrew|dismantle|disassemble|bypass|short|bridge|touch|probe|rewire|replace|disconnect|plug|unplug|press|hold|push|run|operate|switch|turn|test)\b.{0,65}\b(?:panel|cover|guard|wire|wiring|terminal|capacitor|interlock|socket|outlet|plug|power|button|cycle|appliance|device|machine|motor|start|screw|fuse|breaker)\b|\b(?:pressing|holding|opening|removing|bypassing|testing)\b.{0,50}\b(?:button|panel|guard|wire|power|start)\b/i.test(
+  return /(?:^|[.!?]\s+)(?:please\s+)?(?:open|remove|unscrew|dismantle|disassemble|bypass|touch|probe|rewire|disconnect|move|reposition|adjust|reset|reconnect|clean|wipe|plug|unplug|press|hold|push|run|operate|switch|turn|test)\s+(?:it|the|a|your|this|that)\b|पैनल खोल|खोलें|निकालें|चलाएँ|बायपास|(?:\b(?:please|you should|you can|you must|try to|need to)\s+)?\b(?:open|remove|unscrew|dismantle|disassemble|bypass|short|bridge|touch|probe|rewire|replace|disconnect|move|reposition|adjust|reset|reconnect|clean|wipe|plug|unplug|press|hold|push|run|operate|switch|turn|test)\b.{0,65}\b(?:panel|cover|guard|wire|wiring|terminal|capacitor|interlock|socket|outlet|plug|power|button|cycle|appliance|device|machine|motor|start|screw|fuse|breaker)\b|\b(?:pressing|holding|opening|removing|bypassing|testing)\b.{0,50}\b(?:button|panel|guard|wire|power|start)\b/i.test(
     text,
   );
 }
@@ -184,7 +184,7 @@ export function finalize(
     ),
     questions: ai.questions.filter(
       (question) =>
-        !/(press|hold|push|run|operat|switch|turn|touch|plug|test|open|remov|disassembl|bypass|try|what happens if)/i.test(
+        !/(press|hold|push|run|operat|switch|turn|touch|plug|test|open|remov|disassembl|bypass|mov|reposition|adjust|reset|reconnect|clean|wipe|replace|try|what happens if)/i.test(
           question,
         ),
     ),

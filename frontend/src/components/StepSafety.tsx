@@ -28,13 +28,16 @@ export function StepSafety({
       ) : null}
       <p>
         Have you noticed smoke, burning, sparks, electric shock, a gas or
-        refrigerant leak, exposed wiring, or water near electricity?
+        refrigerant leak, frayed or exposed wiring, a tripping breaker,
+        overheating, hot surfaces, melted plastic, crackling, electrical smells,
+        or water near electricity?
       </p>
       {lang === "hi" ? (
         <p lang="hi">
-          धुआँ, जलने की गंध, चिंगारी, करंट, गैस, खुले तार या बिजली के पास पानी
-          दिखे तो रुकें। अनिश्चित होने पर भी उपकरण न चलाएँ। तत्काल खतरे में
-          सुरक्षित जगह जाएँ और स्थानीय आपातकालीन सेवा से संपर्क करें।
+          धुआँ, जलने की गंध, चिंगारी, करंट, गैस, खुले या खराब तार, बार-बार ट्रिप
+          होता ब्रेकर, बहुत गर्म सतह, पिघला प्लास्टिक या बिजली के पास पानी दिखे
+          तो रुकें। अनिश्चित होने पर भी उपकरण न चलाएँ। तत्काल खतरे में सुरक्षित
+          जगह जाएँ और स्थानीय आपातकालीन सेवा से संपर्क करें।
         </p>
       ) : null}
       <fieldset className="safety-options">

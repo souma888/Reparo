@@ -6,7 +6,11 @@ export const auth = createAuthClient(
   { adapter: BetterAuthReactAdapter() },
 );
 export async function bearer() {
-  const { data, error } = await auth.$fetch<{ token: string }>("/token");
-  if (error || !data?.token) throw new Error("Please sign in again.");
-  return data.token;
+  // @neon/auth 0.8.2 injects the signed JWT from its response header into
+  // session.token. Its own adapter's getJWTToken() uses this same method.
+  const { data, error } = await auth.getSession();
+  const token = data?.session?.token;
+  if (error || !token || token.split(".").length !== 3)
+    throw new Error("Please sign in again.");
+  return token; // Signature, issuer, audience and expiry are verified on the API.
 }

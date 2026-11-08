@@ -64,6 +64,7 @@ describe("AI safety and validation", () => {
       ...generated,
       questions: [
         "Does pressing and holding the start button change the display?",
+        "Does the door seal properly after moving the food package?",
         "What error code was already visible?",
       ],
     }));
