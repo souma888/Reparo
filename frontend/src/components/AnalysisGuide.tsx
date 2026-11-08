@@ -4,6 +4,7 @@ import {
   mustStop,
   analysisSchema,
   safetyResult,
+  rulesResult,
   type Analysis,
   type AnalysisRequest,
 } from "../../../shared/analysis";
@@ -29,6 +30,7 @@ export function AnalysisGuide({
     model: initialModel,
     answers: {},
     consent: true,
+    mode: "ai",
   });
   const [step, setStep] = useState(0),
     [safetyAnswered, setSafetyAnswered] = useState(false),
@@ -40,6 +42,7 @@ export function AnalysisGuide({
     [error, setError] = useState(""),
     [photoError, setPhotoError] = useState("");
   const [photoBusy, setPhotoBusy] = useState(false);
+  const aiAttempts = useRef(0);
   const dialog = useRef<HTMLDialogElement>(null),
     heading = useRef<HTMLHeadingElement>(null),
     abort = useRef<AbortController | null>(null);
@@ -63,10 +66,23 @@ export function AnalysisGuide({
       move(3);
       return;
     }
+    if (input.mode === "rules" || aiAttempts.current >= 3) {
+      setResult(
+        rulesResult(
+          input,
+          input.mode === "rules"
+            ? undefined
+            : "This session’s three AI attempts have been used. Basic guidance remains available.",
+        ),
+      );
+      move(3);
+      return;
+    }
+    aiAttempts.current++;
     setBusy(true);
     const controller = new AbortController();
     abort.current = controller;
-    const timer = setTimeout(() => controller.abort(), 55000);
+    const timer = setTimeout(() => controller.abort(), 30000);
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -82,12 +98,15 @@ export function AnalysisGuide({
       setResult(analysisSchema.parse(payload));
       move(3);
     } catch (e) {
-      if (dialog.current?.open)
-        setError(
-          e instanceof Error && e.name !== "AbortError"
-            ? e.message
-            : "Analysis timed out. Please retry.",
+      if (dialog.current?.open) {
+        setResult(
+          rulesResult(
+            input,
+            "AI could not be reached. These basic checks run on your device. No AI result was generated.",
+          ),
         );
+        move(3);
+      }
     } finally {
       clearTimeout(timer);
       setBusy(false);
@@ -174,7 +193,9 @@ export function AnalysisGuide({
                 "Build a clearer picture.",
                 result?.stop
                   ? "Let’s put safety first."
-                  : "Here’s what the evidence suggests.",
+                  : result?.mode === "rules"
+                    ? "A safe place to start."
+                    : "Here’s what the evidence suggests.",
               ][step]
             }
           </h2>
@@ -257,6 +278,29 @@ export function AnalysisGuide({
           ) : null}
           {step === 2 ? (
             <>
+              <fieldset className="safety-options">
+                <legend>Choose your guide</legend>
+                <label className="option">
+                  <input
+                    type="radio"
+                    name="guide-mode"
+                    checked={input.mode === "ai"}
+                    onChange={() => setInput({ ...input, mode: "ai" })}
+                  />
+                  Free-tier AI (limited availability)
+                </label>
+                <label className="option">
+                  <input
+                    type="radio"
+                    name="guide-mode"
+                    checked={input.mode === "rules"}
+                    onChange={() =>
+                      setInput({ ...input, mode: "rules", photo: undefined })
+                    }
+                  />
+                  Basic guide — runs on this device, no AI or key
+                </label>
+              </fieldset>
               <label className="field-label" htmlFor="symptom">
                 Main symptom
               </label>
@@ -290,6 +334,7 @@ export function AnalysisGuide({
               </label>
               <input
                 id="photo"
+                disabled={input.mode === "rules" || photoBusy}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => void loadPhoto(e.target.files?.[0])}
@@ -312,17 +357,21 @@ export function AnalysisGuide({
                   </button>
                 </div>
               ) : null}
-              <label className="consent">
-                <input
-                  type="checkbox"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  required
-                />
-                I agree to send these observations and the optional photo to the
-                AI service through Vercel AI Gateway. Avoid personal
-                information. Provider retention policies apply.
-              </label>
+              {input.mode === "ai" ? (
+                <label className="consent">
+                  <input
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    required
+                  />
+                  I agree to send these observations and the optional photo to
+                  Google’s Gemini API free tier. Google may use inputs and
+                  outputs to improve its products, and human review may occur.
+                  Do not include private or sensitive information. Free quota
+                  limits apply; basic guidance is used if AI is unavailable.
+                </label>
+              ) : null}
             </>
           ) : null}
           {step === 3 && result ? (
@@ -330,8 +379,15 @@ export function AnalysisGuide({
               <div className={`result-tag ${result.stop ? "stop" : ""}`}>
                 {result.stop
                   ? "Stop & seek professional help"
-                  : "AI hypotheses · Unverified · Not a diagnosis"}
+                  : result.mode === "rules"
+                    ? "Basic guidance · No AI analysis"
+                    : "AI hypotheses · Unverified · Not a diagnosis"}
               </div>
+              {result.notice ? (
+                <p className="field-note" role="status">
+                  {result.notice}
+                </p>
+              ) : null}
               <div className="result">
                 {result.observations.length ? (
                   <>
@@ -435,13 +491,13 @@ export function AnalysisGuide({
               {workshop.error ? <p role="alert">{workshop.error}</p> : null}
               <p className="field-note">
                 Rule version: {result.version} ·{" "}
-                {result.model || "Safety rules; no AI call"}
+                {result.model || "Rules only; no AI result"}
               </p>
             </>
           ) : null}
           {busy ? (
             <p className="loading" role="status">
-              Reviewing your evidence… This can take up to 45 seconds.
+              Reviewing your evidence… This can take up to 25 seconds.
             </p>
           ) : null}
           {error ? (
@@ -467,13 +523,15 @@ export function AnalysisGuide({
                   busy ||
                   photoBusy ||
                   (step === 1 && !safetyAnswered) ||
-                  (step === 2 && !consent)
+                  (step === 2 && input.mode === "ai" && !consent)
                 }
               >
                 {step === 2
                   ? busy
                     ? "Analyzing…"
-                    : "Analyze with AI"
+                    : input.mode === "rules"
+                      ? "View basic guidance"
+                      : "Analyze with AI"
                   : "Continue"}
                 <Icon name="arrow" size={18} />
               </button>

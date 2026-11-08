@@ -16,6 +16,7 @@ export const requestSchema = z.object({
     .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/)
     .optional(),
   consent: z.literal(true),
+  mode: z.enum(["ai", "rules"]).default("ai"),
 });
 export type AnalysisRequest = z.infer<typeof requestSchema>;
 export const aiSchema = z.object({
@@ -36,14 +37,16 @@ export const aiSchema = z.object({
 export type AIAnalysis = z.infer<typeof aiSchema>;
 export const analysisSchema = aiSchema.extend({
   stop: z.boolean(),
-  mode: z.enum(["ai", "safety"]),
+  mode: z.enum(["ai", "safety", "rules"]),
+  notice: z.string().optional(),
   checks: z.array(z.string()),
   version: z.string(),
   model: z.string().optional(),
 });
 export type Analysis = AIAnalysis & {
   stop: boolean;
-  mode: "ai" | "safety";
+  mode: "ai" | "safety" | "rules";
+  notice?: string;
   checks: string[];
   version: string;
   model?: string;
@@ -112,5 +115,29 @@ export function finalize(
     checks: approvedChecks(input.appliance),
     version,
     model,
+  };
+}
+export function rulesResult(
+  input: AnalysisRequest,
+  notice = "You chose the free basic guide. No AI request was made.",
+): Analysis {
+  if (mustStop(input)) return safetyResult();
+  return {
+    stop: false,
+    mode: "rules",
+    hazardDetected: false,
+    observations: [
+      `Reported symptom: ${input.symptom}`,
+      ...(input.notes ? [`Your notes: ${input.notes}`] : []),
+    ],
+    hypotheses: [],
+    questions: [],
+    unknowns: [
+      "The cause is unknown. These are general checks, not a diagnosis.",
+      ...(input.photo ? ["The attached photo was not analyzed."] : []),
+    ],
+    checks: approvedChecks(input.appliance),
+    version,
+    notice,
   };
 }

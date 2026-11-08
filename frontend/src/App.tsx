@@ -21,7 +21,7 @@ const questions = [
   ],
   [
     "Are my answers stored?",
-    "Analysis sends your observations and optional photo to Vercel AI Gateway and its model provider with your consent. You can separately choose to save a text case on this browser. Photos are excluded from history. Local records can be deleted; provider retention policies apply to analysis requests.",
+    "Basic guidance runs on your device without AI. If you choose free-tier AI, observations and optional photos go directly from the server to Google’s Gemini API with your consent. Google may use free-tier inputs and outputs to improve its products. Save text cases locally only if you choose; photos are excluded from history.",
   ],
 ];
 

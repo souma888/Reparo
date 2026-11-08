@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-In another terminal, run `npm run dev:api`. Vite serves at `http://localhost:5173` and proxies `/api` to the companion server on port 3001. For local AI requests, set `AI_GATEWAY_API_KEY` in untracked `.env.local`. Never put credentials in a `VITE_` variable. Safety stops do not require an AI call.
+In another terminal, run `npm run dev:api`. Vite serves at `http://localhost:5173` and proxies `/api` to port 3001. Optional free-tier AI uses `GOOGLE_GENERATIVE_AI_API_KEY` from an unbilled Google project, stored in untracked `.env.local`. Never use a `VITE_` secret. Basic guidance runs on the device without an API key or analysis request.
 
 ```sh
 npm test
@@ -24,7 +24,7 @@ The build checks both server and frontend TypeScript. Tests cover safety gates, 
 
 Import `souma888/Reparo`, branch `main`, Root Directory `./`, Framework `Vite`. The tracked configuration sets `npm install`, `npm run build`, and `frontend/dist`. The root `api/analyze.ts` is deployed as a Node.js Vercel Function.
 
-AI Gateway needs an enabled account with access/credits. Vercel deployments can authenticate with OIDC; alternatively configure `AI_GATEWAY_API_KEY` as a server-side environment variable. The optional `AI_GATEWAY_MODEL` overrides the default model; choose an image-capable model from the current gateway catalog. No secret is bundled into the browser.
+For a personal, non-commercial project, keep hosting on Vercel Hobby. AI calls Google directly using fixed free-eligible model `gemini-3.5-flash-lite`. Add `GOOGLE_GENERATIVE_AI_API_KEY` from a Google AI Studio project WITHOUT billing enabled as a server-only variable. No Gateway, card, prepaid credits, or paid-provider fallback is used. Missing keys and free-quota failures produce labeled basic guidance. The app cannot determine billing tier from an API key: the owner must keep the Google project unbilled. See [the free-tier architecture and feature plan](docs/FREE_TIER_PLAN.md).
 
 ## Working features
 
@@ -40,11 +40,11 @@ AI Gateway needs an enabled account with access/credits. Vercel deployments can 
 
 ## Data and limitations
 
-Analysis requests send observations and optional images through Vercel AI Gateway to the model provider only after consent. Reparo does not persist them on its server; provider/gateway retention policies still apply. Operational errors log type only. A separate opt-in saves text cases and appliance records to this browser's localStorage. Photos are never saved in history. Browser data is not encrypted or synchronized; anyone using that browser may see saved records.
+Optional AI requests send evidence directly from the server to Google after consent. Google's free tier may use inputs/outputs for product improvement and human review; avoid sensitive information. Basic mode makes no analysis request. A separate opt-in saves text records locally; photos are excluded. Anyone using that browser can see saved records. Reparo does not persist evidence on its server; provider policies still apply.
 
 Hypotheses are unverified and not calibrated probabilities. Manufacturer portals are navigation links, not retrieved citations. AI text and images can be wrong. Hazard phrase matching is conservative and incomplete; domain expert review and a representative safety evaluation are required before treating this as a diagnostic product. It cannot certify safety or replace a technician.
 
-The endpoint includes a bounded per-instance abuse guard (8 requests/hour/IP). This is not a distributed quota: add a Vercel Firewall rate-limit rule for `/api/analyze` and configure Gateway spend limits for broad public use. No paid budgets are changed by this repository.
+Each guide allows three AI attempts. The API has a best-effort five-requests/hour/IP allowance per function instance, then basic guidance. This is not a global quota. AI is capped at 1,800 output tokens, a 25-second timeout, and zero automatic retries. Keeping provider billing disabled is the actual no-paid-overage boundary. No plans or budgets are upgraded automatically.
 
 ## Future work
 

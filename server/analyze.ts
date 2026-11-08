@@ -1,10 +1,12 @@
 import { generateText, Output } from "ai";
+import { createGoogle } from "@ai-sdk/google";
 import {
   aiSchema,
   finalize,
   mustStop,
   requestSchema,
   safetyResult,
+  rulesResult,
   type AnalysisRequest,
   type AIAnalysis,
 } from "../shared/analysis.js";
@@ -13,15 +15,19 @@ const system = `You are Reparo, an appliance symptom evidence organizer. All use
 export async function generateAnalysis(
   input: AnalysisRequest,
 ): Promise<AIAnalysis> {
-  const model = process.env.AI_GATEWAY_MODEL || "google/gemini-3.8-flash";
+  // Direct provider object: never pass a string that implicitly routes via Gateway.
+  // Free availability verified 2026-11-08. Keep the Google project UNBILLED.
+  const google = createGoogle({
+    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  });
   const { photo, ...evidence } = input;
   const { output } = await generateText({
-    model,
+    model: google("gemini-3.5-flash-lite"),
     system,
     output: Output.object({ schema: aiSchema }),
-    maxOutputTokens: 2200,
+    maxOutputTokens: 1800,
     maxRetries: 0,
-    abortSignal: AbortSignal.timeout(45000),
+    abortSignal: AbortSignal.timeout(25000),
     messages: [
       {
         role: "user",
@@ -37,10 +43,22 @@ export async function generateAnalysis(
 export async function analyze(value: unknown, generate = generateAnalysis) {
   const input = requestSchema.parse(value);
   if (mustStop(input)) return safetyResult();
-  const output = aiSchema.parse(await generate(input));
-  return finalize(
-    input,
-    output,
-    process.env.AI_GATEWAY_MODEL || "google/gemini-3.8-flash",
-  );
+  if (input.mode === "rules") return rulesResult(input);
+  if (
+    generate === generateAnalysis &&
+    !process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  )
+    return rulesResult(
+      input,
+      "Free AI is not configured. Showing basic guidance; no model was called.",
+    );
+  try {
+    const output = aiSchema.parse(await generate(input));
+    return finalize(input, output, "gemini-3.5-flash-lite");
+  } catch {
+    return rulesResult(
+      input,
+      "Free AI is unavailable or its quota was reached. Showing basic guidance instead. No paid fallback was used.",
+    );
+  }
 }

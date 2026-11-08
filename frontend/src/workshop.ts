@@ -7,7 +7,8 @@ import {
 } from "../../shared/analysis";
 const analysisSchema = aiSchema.extend({
   stop: z.boolean(),
-  mode: z.enum(["ai", "safety"]),
+  mode: z.enum(["ai", "safety", "rules"]),
+  notice: z.string().optional(),
   checks: z.array(z.string()),
   version: z.string(),
   model: z.string().optional(),
@@ -126,6 +127,7 @@ export function summary(
     `Model: ${input.model || "Unknown"}`,
     `Symptom: ${input.symptom}`,
     `User notes: ${input.notes || "None"}`,
+    ...(result ? [`Analysis mode: ${result.mode}`, result.notice || ""] : []),
     ...Object.entries(input.answers || {}).map(([q, a]) => `${q}: ${a}`),
     result
       ? `Safety: ${result.stop ? "STOP — professional help needed" : "No reported hazard; not a safety certification"}`

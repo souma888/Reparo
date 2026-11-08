@@ -1,4 +1,5 @@
 import { analyze } from "../server/analyze.js";
+import { requestSchema, rulesResult } from "../shared/analysis.js";
 import { ZodError } from "zod";
 
 // A bounded per-instance abuse guard. Configure a Vercel Firewall rate-limit
@@ -27,11 +28,7 @@ export default {
     for (const [ip, entry] of requests)
       if (entry.until < now) requests.delete(ip);
     const entry = requests.get(key) || { count: 0, until: now + 3600000 };
-    if (entry.count >= 8 || requests.size >= 10000)
-      return reply(
-        { error: "Analysis limit reached. Please try again in an hour." },
-        429,
-      );
+    const limited = entry.count >= 5 || requests.size >= 10000;
     entry.count++;
     requests.set(key, entry);
     try {
@@ -56,7 +53,17 @@ export default {
         bytes.set(chunk, offset);
         offset += chunk.length;
       }
-      return reply(await analyze(JSON.parse(new TextDecoder().decode(bytes))));
+      const input = requestSchema.parse(
+        JSON.parse(new TextDecoder().decode(bytes)),
+      );
+      return reply(
+        limited
+          ? rulesResult(
+              input,
+              "This instance’s hourly AI allowance was reached. Basic guidance remains available; no paid fallback was used.",
+            )
+          : await analyze(input),
+      );
     } catch (error) {
       if (error instanceof ZodError || error instanceof SyntaxError)
         return reply(
@@ -72,7 +79,7 @@ export default {
       return reply(
         {
           error:
-            "AI analysis is unavailable. The project owner may need to enable AI Gateway credits or credentials. You can retry or download your observations; no AI diagnosis was generated.",
+            "The guide is temporarily unavailable. Try basic guidance or download your observations. No paid fallback was used.",
         },
         503,
       );

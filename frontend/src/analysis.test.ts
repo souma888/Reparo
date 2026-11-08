@@ -1,6 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
 import { analyze } from "../../server/analyze";
-import { requestSchema, type AIAnalysis } from "../../shared/analysis";
+import {
+  requestSchema,
+  rulesResult,
+  type AIAnalysis,
+} from "../../shared/analysis";
 import endpoint from "../../api/analyze";
 const input = {
   appliance: "washer",
@@ -74,10 +78,36 @@ describe("AI safety and validation", () => {
       requestSchema.safeParse({ ...input, notes: "x".repeat(2001) }).success,
     ).toBe(false);
   });
-  it("rejects malformed AI responses", async () => {
-    await expect(
-      analyze(input, async () => ({}) as AIAnalysis),
-    ).rejects.toThrow();
+  it("falls back to basic guidance for malformed AI responses", async () => {
+    expect((await analyze(input, async () => ({}) as AIAnalysis)).mode).toBe(
+      "rules",
+    );
+  });
+  it("never calls a provider in explicit basic mode", async () => {
+    const model = vi.fn();
+    expect((await analyze({ ...input, mode: "rules" }, model)).mode).toBe(
+      "rules",
+    );
+    expect(model).not.toHaveBeenCalled();
+  });
+  it("keeps the app usable on free-quota exhaustion without paid retries", async () => {
+    const model = vi.fn().mockRejectedValue(new Error("429"));
+    const result = await analyze(input, model);
+    expect(result.mode).toBe("rules");
+    expect(result.notice).toContain("No paid fallback");
+    expect(model).toHaveBeenCalledTimes(1);
+  });
+  it("does not invent photo observations in fallback mode", () => {
+    const result = rulesResult(
+      requestSchema.parse({ ...input, photo: "data:image/jpeg;base64,AAAA" }),
+    );
+    expect(result.unknowns).toContain("The attached photo was not analyzed.");
+    expect(result.hypotheses).toEqual([]);
+  });
+  it("never lets fallback bypass a safety stop", () => {
+    expect(
+      rulesResult(requestSchema.parse({ ...input, safety: "yes" })).stop,
+    ).toBe(true);
   });
   it("rejects unsupported methods and cross-origin traffic", async () => {
     expect(
