@@ -1,76 +1,63 @@
 # Reparo
 
-**An AI-assisted appliance troubleshooting and repair guidance platform.**
+An appliance care workspace with AI-assisted text and exterior-photo analysis, deterministic safety stops, local appliance records, case history, and technician summaries. Black, ivory, and bronze visual design.
 
-Reparo is a planned full-stack application that helps people understand appliance faults through structured symptom reports, optional photos, sound recordings, and eventually video. Its goal is to provide **evidence-backed, safety-aware diagnostic guidance** rather than confident guesses.
+## Run
 
-> **Status:** A responsive React frontend and browser-only guided preview are implemented. The backend, trained models, and diagnostic service are not implemented yet.
-
-## Why Reparo?
-When an appliance fails, users may not know what to check, whether the issue is safe to investigate, or when professional help is necessary. Reparo aims to turn symptoms and available evidence into understandable troubleshooting steps, uncertainty estimates, and clear escalation guidance.
-
-## Planned experience
-1. Select an appliance type and describe symptoms.
-2. Answer targeted follow-up questions and optionally upload a photo or short audio clip.
-3. Receive possible causes **ranked with uncertainty**, supporting observations, and safe checks.
-4. Review safety warnings and stop conditions before any action.
-5. Save a diagnostic session and optionally export a summary for a technician (later).
-
-## Initial scope
-**MVP:** a limited set of common appliance categories, text-based symptom intake, rule-based troubleshooting trees, safety triage, guided questions, and structured results. Start with low-risk, non-invasive checks.
-
-**Later:** image analysis, audio classification, multimodal fusion, retrieval from verified manuals, user accounts, repair histories, technician handoff, and carefully scoped video support.
-
-## Technology
-- Frontend (implemented): React, TypeScript, Vite
-- Backend: Python, FastAPI, Pydantic
-- Database: PostgreSQL when accounts and saved sessions are introduced
-- ML: PyTorch/scikit-learn or hosted inference where validated and cost-effective
-- Retrieval: manual/document ingestion, provenance metadata, optional vector search
-- Jobs/storage: object storage and async workers for media processing when needed
-- Quality: pytest, frontend tests, evaluation datasets, CI
-
-## Documentation
-- [Product context](docs/PROJECT_CONTEXT.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Features and MVP](docs/FEATURES.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Data and ML strategy](docs/DATA_AND_ML.md)
-- [Safety and evaluation](docs/SAFETY_AND_EVALUATION.md)
-- [Development plan](docs/DEVELOPMENT.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security](SECURITY.md)
-
-## Repository layout
-```text
-Reparo/
-├── .github/             # Issue and pull-request templates
-├── docs/                # Product and technical plans
-├── frontend/            # Web client and guided preview
-├── backend/             # Future API, reasoning and ML services
-├── tests/               # Future integration and evaluation cases
-├── .env.example
-└── README.md
-```
-
-## Getting started
-Requires Node.js 22.12+ and npm. From the repository root:
+Requires Node.js 22.12+ and npm.
 
 ```sh
 npm install
 npm run dev
 ```
 
-Run `npm test` for safety-gate regression cases and `npm run build` for TypeScript checks and a production build. No environment variables or backend are required for the frontend preview. Answers remain in memory until the guide is closed; users can download a text summary.
+In another terminal, run `npm run dev:api`. Vite serves at `http://localhost:5173` and proxies `/api` to the companion server on port 3001. For local AI requests, set `AI_GATEWAY_API_KEY` in untracked `.env.local`. Never put credentials in a `VITE_` variable. Safety stops do not require an AI call.
 
-### Deploy on Vercel
+```sh
+npm test
+npm run build
+```
 
-Import `souma888/Reparo`, select the `main` branch, and leave **Root Directory at the repository root**. The tracked `vercel.json` configures Vite, `npm run build`, and `frontend/dist`. No environment variables are needed. The deployment is a static frontend; AI diagnosis, accounts, uploads, and saved histories are not available yet.
+The build checks both server and frontend TypeScript. Tests cover safety gates, validation, malformed AI output, consent, and API behavior. Provider behavior needs live evaluation; passing software tests does not establish diagnostic accuracy.
 
-See [frontend setup](frontend/README.md) and [the development plan](docs/DEVELOPMENT.md) for details.
+## Deploy on Vercel
 
-## Important safety notice
-Reparo must never encourage users to open energized devices, bypass interlocks, handle refrigerants, test exposed mains wiring, or perform other hazardous repairs. Suspected gas leaks, smoke, fire, electric shock, or other emergencies require immediate cessation of troubleshooting and appropriate emergency/professional assistance. Guidance is educational and does not replace a qualified technician.
+Import `souma888/Reparo`, branch `main`, Root Directory `./`, Framework `Vite`. The tracked configuration sets `npm install`, `npm run build`, and `frontend/dist`. The root `api/analyze.ts` is deployed as a Node.js Vercel Function.
 
-## License
-No license has been chosen yet. The repository being public does not itself grant permission to reuse its contents.
+AI Gateway needs an enabled account with access/credits. Vercel deployments can authenticate with OIDC; alternatively configure `AI_GATEWAY_API_KEY` as a server-side environment variable. The optional `AI_GATEWAY_MODEL` overrides the default model; choose an image-capable model from the current gateway catalog. No secret is bundled into the browser.
+
+## Working features
+
+- Clickable appliance categories and an accessible, keyboard-navigable workspace.
+- Mandatory hazard triage before AI; yes/unsure and recognized hazard phrases stop analysis.
+- Structured AI observations, tentative explanations, explicit uncertainty, unknowns, and follow-up questions.
+- Optional exterior JPEG/PNG/WebP photo, resized to 1200px and re-encoded without metadata before submission. Maximum source size 8 MB; encoded request is bounded server-side.
+- Safe next actions from a fixed ruleset; model output never defines the action checklist.
+- Consent-based local case history: search/filter, expand, resolve/reopen, feedback, delete, and text export.
+- Local appliance records with brand/model and user-selected in-app care dates.
+- Manufacturer support portal links and a care resource library.
+- Real loading, retry, timeout, validation, storage failure, and provider-unavailable states.
+
+## Data and limitations
+
+Analysis requests send observations and optional images through Vercel AI Gateway to the model provider only after consent. Reparo does not persist them on its server; provider/gateway retention policies still apply. Operational errors log type only. A separate opt-in saves text cases and appliance records to this browser's localStorage. Photos are never saved in history. Browser data is not encrypted or synchronized; anyone using that browser may see saved records.
+
+Hypotheses are unverified and not calibrated probabilities. Manufacturer portals are navigation links, not retrieved citations. AI text and images can be wrong. Hazard phrase matching is conservative and incomplete; domain expert review and a representative safety evaluation are required before treating this as a diagnostic product. It cannot certify safety or replace a technician.
+
+The endpoint includes a bounded per-instance abuse guard (8 requests/hour/IP). This is not a distributed quota: add a Vercel Firewall rate-limit rule for `/api/analyze` and configure Gateway spend limits for broad public use. No paid budgets are changed by this repository.
+
+## Future work
+
+Cloud accounts and cross-device sync, audio/video analysis, verified manual retrieval with citations, technician booking, pricing integrations, and expert-reviewed model evaluations are not implemented. No controls pretend those integrations are available.
+
+## Source map
+
+- `frontend/src/components/AnalysisGuide.tsx`: intake, images, AI results, follow-ups.
+- `frontend/src/components/Workspace.tsx`: appliance records, history, resources.
+- `frontend/src/workshop.ts`: validated local records and exports.
+- `shared/analysis.ts`: request/result schemas, safety rules, approved checks.
+- `server/analyze.ts`: structured AI SDK integration.
+- `api/analyze.ts`: deployed HTTP endpoint and request limits.
+- `docs/`: original product plans and implementation notes.
+
+No license has been selected.

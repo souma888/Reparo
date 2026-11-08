@@ -1,0 +1,126 @@
+import { describe, it, expect, vi } from "vitest";
+import { analyze } from "../../server/analyze";
+import { requestSchema, type AIAnalysis } from "../../shared/analysis";
+import endpoint from "../../api/analyze";
+const input = {
+  appliance: "washer",
+  symptom: "Will not start",
+  safety: "no",
+  notes: "Display shows E02",
+  consent: true,
+};
+const generated: AIAnalysis = {
+  hazardDetected: false,
+  observations: ["Reported E02"],
+  hypotheses: [
+    {
+      title: "Door state",
+      reason: "Reported start issue",
+      uncertainty: "Not confirmed",
+    },
+  ],
+  questions: ["Was an error visible?"],
+  unknowns: ["Exact model"],
+};
+describe("AI safety and validation", () => {
+  it("never calls the model for an explicit hazard", async () => {
+    const model = vi.fn();
+    const result = await analyze({ ...input, safety: "yes" }, model);
+    expect(result.stop).toBe(true);
+    expect(model).not.toHaveBeenCalled();
+  });
+  it("cannot downgrade a hazard mentioned in follow-up answers", async () => {
+    const model = vi.fn();
+    expect(
+      (
+        await analyze(
+          { ...input, answers: { followup: "smoke appears" } },
+          model,
+        )
+      ).stop,
+    ).toBe(true);
+    expect(model).not.toHaveBeenCalled();
+  });
+  it("discards hypotheses when the model flags a photo hazard", async () => {
+    const result = await analyze(input, async () => ({
+      ...generated,
+      hazardDetected: true,
+    }));
+    expect(result.stop).toBe(true);
+    expect(result.hypotheses).toEqual([]);
+  });
+  it("combines structured AI with fixed safe actions", async () => {
+    const result = await analyze(input, async () => generated);
+    expect(result.mode).toBe("ai");
+    expect(result.hypotheses).toHaveLength(1);
+    expect(result.checks.join(" ")).toContain("Do not bypass");
+  });
+  it("rejects absent consent and unsupported appliance", () => {
+    expect(requestSchema.safeParse({ ...input, consent: false }).success).toBe(
+      false,
+    );
+    expect(
+      requestSchema.safeParse({ ...input, appliance: "gas boiler" }).success,
+    ).toBe(false);
+  });
+  it("rejects remote photo URLs and oversized notes", () => {
+    expect(
+      requestSchema.safeParse({
+        ...input,
+        photo: "https://example.com/image.jpg",
+      }).success,
+    ).toBe(false);
+    expect(
+      requestSchema.safeParse({ ...input, notes: "x".repeat(2001) }).success,
+    ).toBe(false);
+  });
+  it("rejects malformed AI responses", async () => {
+    await expect(
+      analyze(input, async () => ({}) as AIAnalysis),
+    ).rejects.toThrow();
+  });
+  it("rejects unsupported methods and cross-origin traffic", async () => {
+    expect(
+      (await endpoint.fetch(new Request("http://localhost/api/analyze")))
+        .status,
+    ).toBe(405);
+    expect(
+      (
+        await endpoint.fetch(
+          new Request("http://localhost/api/analyze", {
+            method: "POST",
+            headers: {
+              origin: "https://elsewhere.test",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(input),
+          }),
+        )
+      ).status,
+    ).toBe(403);
+  });
+  it("validates JSON before any provider call", async () => {
+    expect(
+      (
+        await endpoint.fetch(
+          new Request("http://localhost/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{bad",
+          }),
+        )
+      ).status,
+    ).toBe(400);
+  });
+  it("handles a safety request end-to-end without credentials", async () => {
+    const response = await endpoint.fetch(
+      new Request("http://localhost/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...input, safety: "unsure" }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect((await response.json()).mode).toBe("safety");
+  });
+});

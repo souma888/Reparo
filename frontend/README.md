@@ -1,34 +1,7 @@
-# Reparo frontend
+# Frontend
 
-React 19 + TypeScript + Vite. Black `#181818`, ivory `#F5F1E9`, and bronze `#A77B46`, with generous whitespace, serif display headings, fine borders, and an original SVG appliance illustration. Google Fonts are optional enhancements; system font fallbacks keep the app usable if fonts are unavailable.
+React + TypeScript + Vite with a shared validated AI request/result contract. See the root README and docs/IMPLEMENTATION.md for the current run/deployment instructions and feature boundaries.
 
-## Run from the repository root
+Use `npm run dev` and, in another terminal, `npm run dev:api` from the repository root. Local AI requires a server-only key in untracked `.env.local`. Root `npm run build` checks both server and browser code; `npm test` runs regression tests.
 
-```sh
-npm install
-npm run dev
-npm test
-npm run build
-npm run preview
-```
-
-Requires Node.js 22.12+. Development serves at `http://127.0.0.1:5173`; production preview at `http://127.0.0.1:4173`.
-
-## Included
-
-- Responsive landing page, mobile navigation, appliance selection, safety principles, and FAQ disclosures.
-- Native modal guide with mandatory hazard triage, symptom intake, and conservative general observations.
-- Yes or unsure safety answers stop the flow. Conservative text matching can escalate a no answer; it is not a validated natural-language hazard detector.
-- Plain-text summary download. No answer uploads, storage, or inference.
-- Keyboard controls, native dialog focus containment, Escape dismissal, and reduced-motion support.
-- Vitest safety regression cases and GitHub Actions build checks.
-
-## Vercel
-
-Import the repository with Root Directory at the repository root (`.`). `vercel.json` supplies install/build/output settings. No environment variables are required. The npm workspace lockfile is at the repository root.
-
-## Boundaries
-
-This is an explicitly labeled frontend preview, not a diagnostic product. It provides general external observations and escalation without possible-cause rankings, confidence claims, model-specific instructions, or safety certification. Answers are cleared when the modal closes or the page reloads. A downloaded summary stays on the user's device.
-
-The backend and reviewed knowledge base remain future work. Expand safety rules only with domain review and evaluation. No repository license has been selected.
+The workspace supports appliance records, local case history, resource navigation, and AI intake/results. Browser-only persistence is opt-in and excludes photos. Accounts, sync, audio/video, and retrieved manual citations are not available.

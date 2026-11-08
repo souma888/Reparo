@@ -2,12 +2,14 @@ import { useState } from "react";
 import { appliances } from "./diagnostics";
 import { ApplianceDrawing } from "./components/ApplianceDrawing";
 import { Icon } from "./components/Icon";
-import { Troubleshooter } from "./components/Troubleshooter";
+import { AnalysisGuide } from "./components/AnalysisGuide";
+import { Workspace } from "./components/Workspace";
+import { useWorkshop } from "./workshop";
 
 const questions = [
   [
     "What can I try today?",
-    "You can explore the guided frontend: choose an appliance, answer the safety questions, and receive general external observations. This preview runs in your browser. It does not diagnose faults or connect to an AI service.",
+    "Choose an appliance, complete the safety check, and send symptoms or an exterior photo for AI-assisted analysis. Results distinguish observations, unverified possible explanations, unknowns, and safe next steps.",
   ],
   [
     "Will Reparo tell me how to repair an appliance?",
@@ -15,20 +17,23 @@ const questions = [
   ],
   [
     "Can I upload a photo or an audio clip?",
-    "Not yet. Photos, audio, and manual-based guidance are planned for later, after data quality, consent, privacy, and safety evaluation are in place.",
+    "You can include an exterior JPEG, PNG, or WebP photo. It is resized and metadata is removed before it is sent with your consent to the AI service. Audio and video analysis are not available yet.",
   ],
   [
     "Are my answers stored?",
-    "This preview keeps your answers in memory while the guide is open. Nothing is sent to a diagnostic server or saved by Reparo. You can choose to download a plain-text summary to your own device.",
+    "Analysis sends your observations and optional photo to Vercel AI Gateway and its model provider with your consent. You can separately choose to save a text case on this browser. Photos are excluded from history. Local records can be deleted; provider retention policies apply to analysis requests.",
   ],
 ];
 
 export default function App() {
+  const workshop = useWorkshop();
   const [guide, setGuide] = useState<string | null>(null);
+  const [guideModel, setGuideModel] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const openGuide = (id = "washer") => {
+  const openGuide = (id = "washer", model = "") => {
     setMenuOpen(false);
     setGuide(id);
+    setGuideModel(model);
   };
   return (
     <>
@@ -63,6 +68,9 @@ export default function App() {
           <a href="#questions" onClick={() => setMenuOpen(false)}>
             Good to know
           </a>
+          <a href="#workspace" onClick={() => setMenuOpen(false)}>
+            My workspace
+          </a>
           <button className="nav-cta" onClick={() => openGuide()}>
             Try the guide <Icon name="arrow" size={18} />
           </button>
@@ -90,7 +98,7 @@ export default function App() {
               <Icon name="shield" size={17} />
               <span>Safety first. Always.</span>
               <span className="dot" />
-              <span>Free frontend preview</span>
+              <span>AI-assisted understanding</span>
             </div>
           </div>
           <div className="hero-art">
@@ -164,10 +172,11 @@ export default function App() {
           </div>
           <div className="coverage-note">
             <span className="status-dot" />
-            An early look at Reparo. General guidance today; model-specific
-            diagnostics are still in development.
+            AI-assisted possibilities, clearly explained. Model-specific manual
+            verification is not yet available.
           </div>
         </section>
+        <Workspace workshop={workshop} onStart={openGuide} />
         <section id="approach" className="approach section">
           <div className="approach-intro">
             <p className="eyebrow">
@@ -286,16 +295,18 @@ export default function App() {
         <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Reparo · Built with care.</span>
           <p>
-            Educational frontend preview. Not a diagnosis or a substitute for a
+            AI-assisted guidance. Not a diagnosis or a substitute for a
             qualified technician.
           </p>
           <a href="#main">Back to top ↑</a>
         </div>
       </footer>
       {guide !== null ? (
-        <Troubleshooter
+        <AnalysisGuide
           initialAppliance={guide}
+          initialModel={guideModel}
           onClose={() => setGuide(null)}
+          workshop={workshop}
         />
       ) : null}
     </>
