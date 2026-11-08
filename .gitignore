@@ -27,3 +27,7 @@ uploads/
 media/
 models/
 checkpoints/
+.vercel
+.env*
+
+!.env.example

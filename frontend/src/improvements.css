@@ -1,0 +1,219 @@
+.preferences {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 5%;
+  border-bottom: 1px solid var(--line);
+}
+.preferences select {
+  background: transparent;
+  color: var(--ink);
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+}
+.emergency-panel {
+  background: #641c17 !important;
+  color: #fff !important;
+  padding: 1.25rem;
+  border: 2px solid #c24b3e;
+  font-size: 1.05rem;
+}
+.symptom-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  border: 0;
+  padding: 0;
+}
+.symptom-chips label {
+  border: 1px solid var(--line);
+  padding: 0.7rem;
+  border-radius: 2rem;
+  cursor: pointer;
+}
+.symptom-chips label.selected {
+  background: var(--ink);
+  color: var(--ivory);
+}
+.symptom-chips input {
+  width: auto;
+  margin-right: 0.35rem;
+  accent-color: var(--bronze-text);
+}
+.drop-zone {
+  border: 1px dashed var(--bronze);
+  padding: 1rem;
+}
+.drop-zone span {
+  display: block;
+}
+.submit-choice {
+  margin-top: 1.5rem;
+}
+.handoff-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.receipt-image {
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  display: block;
+}
+.recurring-alert {
+  border-left: 3px solid var(--bronze);
+  padding: 0.7rem;
+}
+.toast {
+  padding: 0.75rem;
+  background: var(--ink);
+  color: var(--ivory);
+  border-radius: var(--radius);
+}
+.manual-library {
+  margin-block: 2rem;
+}
+.manual-library blockquote {
+  margin: 1rem 0;
+  border-left: 2px solid var(--bronze);
+  padding: 1rem;
+}
+.loading {
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, transparent, #a77b4620, transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: 200% 0;
+  }
+}
+dialog[open] {
+  animation: dialog-in 0.18s ease-out;
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #f5f1e9;
+  --ivory: #181818;
+  --surface: #22211e;
+  --line: #514c43;
+  --muted: #c4bdb0;
+  --bronze-text: #d7ad77;
+  color: var(--ink);
+  background: var(--ivory);
+  color-scheme: dark;
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .troubleshooter,
+html[data-theme="dark"] .site-header,
+html[data-theme="dark"] .workspace,
+html[data-theme="dark"] .workspace-tabs button,
+html[data-theme="dark"] .workspace-stats button,
+html[data-theme="dark"] .device-list article,
+html[data-theme="dark"] .case-card,
+html[data-theme="dark"] .camera-workbench {
+  background: var(--ivory);
+  color: var(--ink);
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  background: var(--surface);
+  color: var(--ink);
+}
+html[data-theme="dark"] p,
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4,
+html[data-theme="dark"] a,
+html[data-theme="dark"] label,
+html[data-theme="dark"] .wordmark {
+  color: inherit;
+}
+html[data-theme="dark"] .field-note {
+  color: var(--muted);
+}
+html[data-theme="dark"] .button.dark {
+  background: #a77b46;
+  color: #181818;
+}
+html[data-theme="dark"] .camera-stage {
+  background: #090909;
+}
+@media print {
+  body > * {
+    display: none;
+  }
+  dialog {
+    display: block;
+    position: static;
+    width: 100%;
+    max-height: none;
+    box-shadow: none;
+  }
+  .dialog-top,
+  .progress,
+  button,
+  .preview-note {
+    display: none !important;
+  }
+}
+
+.offline-banner {
+  margin: 0;
+  padding: 0.75rem 5%;
+  background: var(--ink);
+  color: var(--ivory);
+}
+:root[data-theme="dark"] .device-form input,
+:root[data-theme="dark"] .device-form select,
+:root[data-theme="dark"] .troubleshooter input,
+:root[data-theme="dark"] .troubleshooter textarea,
+:root[data-theme="dark"] .camera-workbench textarea {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .principles,
+    .approach-section {
+      animation: gentle-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+@keyframes gentle-reveal {
+  from {
+    opacity: 0.6;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

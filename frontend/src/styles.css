@@ -1,7 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Libre+Caslon+Display&display=swap");
-
 :root {
-  font-family: "DM Sans", sans-serif;
+  font-family: "DM Sans Variable", sans-serif;
   color: #181818;
   background: #f5f1e9;
   font-synthesis: none;
@@ -9,6 +7,17 @@
   --ivory: #f5f1e9;
   --ink: #181818;
   --bronze: #a77b46;
+  --bronze-text: #8a5f2b;
+  --surface: #fffdf8;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --radius: 0.5rem;
+  --shadow: 0 12px 48px #18181814;
+  --text-small: 0.875rem;
+  --text-body: 1rem;
+  --text-title: clamp(2rem, 5vw, 4.5rem);
   --muted: #68665f;
   --line: #d9d4c9;
   -webkit-font-smoothing: antialiased;
@@ -81,7 +90,7 @@ h2 {
 h1 em,
 h2 em {
   font-weight: 400;
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 .site-header,
 .hero,
@@ -122,7 +131,7 @@ h2 em {
   padding-right: 3px;
 }
 .brand-period {
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 nav {
   display: flex;
@@ -134,7 +143,7 @@ nav > a {
   color: #55544e;
 }
 nav > a:hover {
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 .nav-cta {
   background: transparent;
@@ -146,7 +155,7 @@ nav > a:hover {
   font-size: 12px;
 }
 .nav-cta:hover {
-  border-color: var(--bronze);
+  border-color: var(--bronze-text);
   background: #eee7dc;
 }
 .menu-toggle {
@@ -226,7 +235,7 @@ h1 {
   margin-top: 20px;
 }
 .hero-assurance svg {
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 .dot {
   width: 3px;
@@ -313,7 +322,7 @@ h1 {
   gap: 25px;
 }
 .hero-footer a span {
-  color: var(--bronze);
+  color: var(--bronze-text);
   font-size: 17px;
 }
 .principles {
@@ -334,7 +343,7 @@ h1 {
   border-left: 1px solid var(--line);
 }
 .principles svg {
-  color: var(--bronze);
+  color: var(--bronze-text);
   width: 20px;
 }
 .section {
@@ -411,7 +420,7 @@ h2 {
   position: absolute;
   right: 20px;
   bottom: 48px;
-  color: var(--bronze);
+  color: var(--bronze-text);
   transition: transform 0.2s;
 }
 .appliance-card:hover .card-arrow {
@@ -459,7 +468,7 @@ h2 {
   border-bottom: 1px solid #bbae99;
 }
 .underlined-link:hover {
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 .steps {
   padding-top: 4px;
@@ -476,7 +485,7 @@ h2 {
 .step > span {
   font-family: Georgia, serif;
   font-size: 22px;
-  color: var(--bronze);
+  color: var(--bronze-text);
 }
 .step h3 {
   font-size: 15px;
@@ -562,7 +571,7 @@ summary::-webkit-details-marker {
 }
 summary svg {
   flex: none;
-  color: var(--bronze);
+  color: var(--bronze-text);
   transition: transform 0.2s;
 }
 details[open] summary svg {
@@ -733,7 +742,7 @@ body:has(dialog[open]) {
   cursor: pointer;
 }
 .option.selected {
-  border-color: var(--bronze);
+  border-color: var(--bronze-text);
   background: #eae1d3;
 }
 .option input {
@@ -1182,7 +1191,7 @@ input:not([type="radio"]):not([type="checkbox"]),
 }
 .workspace-tabs [aria-selected="true"] {
   color: var(--ink);
-  border-bottom-color: var(--bronze);
+  border-bottom-color: var(--bronze-text);
 }
 .workspace-stats {
   display: grid;
@@ -1224,7 +1233,7 @@ input:not([type="radio"]):not([type="checkbox"]),
   gap: 24px;
 }
 .workspace-welcome > svg {
-  color: var(--bronze);
+  color: var(--bronze-text);
   flex: none;
 }
 .workspace-welcome div {
@@ -1262,7 +1271,7 @@ input:not([type="radio"]):not([type="checkbox"]),
   border: 1px dashed #bcb09e;
 }
 .empty-state svg {
-  color: var(--bronze);
+  color: var(--bronze-text);
   margin-bottom: 17px;
 }
 .empty-state p {
@@ -1301,7 +1310,7 @@ input:not([type="radio"]):not([type="checkbox"]),
   gap: 22px;
 }
 .device-list article > svg {
-  color: var(--bronze);
+  color: var(--bronze-text);
   flex: none;
 }
 .device-list article > div {
@@ -1428,7 +1437,7 @@ input:not([type="radio"]):not([type="checkbox"]),
 }
 .consent input {
   margin-top: 5px;
-  accent-color: var(--bronze);
+  accent-color: var(--bronze-text);
   flex: none;
 }
 .result h3 {

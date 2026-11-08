@@ -1,0 +1,56 @@
+[
+  {
+    "id": "lg-ie",
+    "brand": "LG",
+    "category": "washer",
+    "code": "IE",
+    "meaning": "Water inlet / filling error. The cause is not established by the code.",
+    "scope": "LG top-load washer support; check your exact model manual.",
+    "source": "https://www.lg.com/us/support/help-library/lg-top-load-washer-error-code-list-CT10000010-20154403824104"
+  },
+  {
+    "id": "lg-oe",
+    "brand": "LG",
+    "category": "washer",
+    "code": "OE",
+    "meaning": "Water outlet / drainage error. The code alone does not identify a failed part.",
+    "scope": "LG top-load washer support; check your exact model manual.",
+    "source": "https://www.lg.com/us/support/help-library/lg-top-load-washer-error-code-list-CT10000010-20154403824104"
+  },
+  {
+    "id": "lg-ue",
+    "brand": "LG",
+    "category": "washer",
+    "code": "UE",
+    "meaning": "Load imbalance indication. Verify the meaning for your model.",
+    "scope": "LG top-load washer support; check your exact model manual.",
+    "source": "https://www.lg.com/us/support/help-library/lg-top-load-washer-error-code-list-CT10000010-20154403824104"
+  },
+  {
+    "id": "samsung-4c",
+    "brand": "Samsung",
+    "category": "washer",
+    "code": "4C",
+    "meaning": "Not filling indication. This does not identify the underlying cause.",
+    "scope": "Samsung washer support; code meanings vary by model.",
+    "source": "https://www.samsung.com/us/support/troubleshoot/TSG10000997/"
+  },
+  {
+    "id": "samsung-5c",
+    "brand": "Samsung",
+    "category": "washer",
+    "code": "5C",
+    "meaning": "Drainage indication. Do not infer a specific failed part.",
+    "scope": "Samsung washer support; code meanings vary by model.",
+    "source": "https://www.samsung.com/us/support/troubleshoot/TSG10000997/"
+  },
+  {
+    "id": "samsung-dc",
+    "brand": "Samsung",
+    "category": "washer",
+    "code": "dC",
+    "meaning": "May refer to a door condition; on some models similar codes refer to imbalance. Exact model verification is required.",
+    "scope": "Samsung washer support; ambiguous across models.",
+    "source": "https://www.samsung.com/us/support/troubleshoot/TSG10000997/"
+  }
+]

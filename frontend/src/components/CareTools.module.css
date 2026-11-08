@@ -1,0 +1,30 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: var(--space-4);
+  margin-block: var(--space-4);
+}
+.card {
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.card label {
+  display: block;
+  margin-block: 1rem;
+}
+.card input,
+.card select {
+  width: 100%;
+  margin-top: 0.4rem;
+}
+.answer {
+  border-left: 3px solid var(--bronze);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+.code {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+}

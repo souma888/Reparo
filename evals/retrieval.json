@@ -1,0 +1,8 @@
+[
+{"model":"X123","query":"E02","expectedPage":1},
+{"model":"X-123","query":"delayed start","expectedPage":1},
+{"model":"X123","query":"warranty","expectedPage":2},
+{"model":"X124","query":"E02","expectedPage":null},
+{"model":"","query":"E02","expectedPage":null},
+{"model":"X123","query":"compressor","expectedPage":null}
+]

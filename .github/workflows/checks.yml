@@ -1,4 +1,4 @@
-name: Frontend checks
+name: Application checks (API, safety, UI, build)
 on:
   push:
     branches: [main]

@@ -1,3 +1,12 @@
+import { DeviceCard } from "./DeviceCard";
+import { DeviceEditor } from "./DeviceEditor";
+import { lazy, Suspense } from "react";
+const AccountPanel = lazy(() =>
+  import("./AccountPanel").then((m) => ({ default: m.AccountPanel })),
+);
+import { CareTools } from "./CareTools";
+import { ManualLibrary } from "./ManualLibrary";
+import { Handoff } from "./Handoff";
 import { useState, type FormEvent } from "react";
 import { appliances } from "../diagnostics";
 import { downloadText, summary, type Workshop, type Device } from "../workshop";
@@ -15,7 +24,7 @@ export function Workspace({
   onStart,
 }: {
   workshop: Workshop;
-  onStart: (id?: string, model?: string) => void;
+  onStart: (id?: string, model?: string, deviceId?: string) => void;
 }) {
   const [tab, setTab] = useState("Overview"),
     [search, setSearch] = useState(""),
@@ -36,6 +45,7 @@ export function Workspace({
     "My appliances",
     "Case history",
     "Care library",
+    "Tools",
     "Backup & data",
   ];
   const reminders = workshop.data.devices
@@ -221,7 +231,8 @@ export function Workspace({
               )}
               <p className="field-note">
                 Marking care done records your action; it does not certify
-                safety. Calendar exports are one event and do not auto-sync.
+                safety. Calendar exports include your chosen repeat interval and
+                do not auto-sync.
               </p>
             </div>
             <div className="workspace-welcome">
@@ -263,161 +274,39 @@ export function Workspace({
               </button>
             </div>
             {adding ? (
-              <form className="device-form" onSubmit={add}>
-                <label>
-                  Appliance name
-                  <input
-                    autoFocus
-                    required
-                    maxLength={80}
-                    value={device.name}
-                    onChange={(e) =>
-                      setDevice({ ...device, name: e.target.value })
-                    }
-                    placeholder="Laundry room washer"
-                    pattern=".*\S.*"
-                  />
-                </label>
-                <label>
-                  Category
-                  <select
-                    value={device.category}
-                    onChange={(e) =>
-                      setDevice({
-                        ...device,
-                        category: e.target.value as Device["category"],
-                      })
-                    }
-                  >
-                    {appliances.map((a) => (
-                      <option value={a.id} key={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Brand / model
-                  <input
-                    maxLength={120}
-                    value={device.model}
-                    onChange={(e) =>
-                      setDevice({ ...device, model: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Next care date (optional)
-                  <input
-                    type="date"
-                    name="careDate"
-                    value={device.careDate}
-                    onChange={(e) =>
-                      setDevice({ ...device, careDate: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Repeat after care is done
-                  <select
-                    value={device.careIntervalDays || 0}
-                    onChange={(e) =>
-                      setDevice({
-                        ...device,
-                        careIntervalDays: Number(e.target.value),
-                      })
-                    }
-                  >
-                    <option value={0}>Do not repeat</option>
-                    <option value={30}>After 30 days</option>
-                    <option value={90}>After 90 days</option>
-                    <option value={180}>After 180 days</option>
-                    <option value={365}>After 365 days</option>
-                  </select>
-                </label>
-                <p className="field-note">
-                  Choose timing from your manufacturer manual. Reparo does not
-                  prescribe service intervals.
-                </p>
-                <label className="consent">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={deviceConsent}
-                    onChange={(e) => setDeviceConsent(e.target.checked)}
-                  />
-                  Store these details on this browser.
-                </label>
-                <button className="button dark">
-                  {editing ? "Save changes" : "Save appliance"}
-                </button>
-              </form>
+              <DeviceEditor
+                add={add}
+                device={device}
+                setDevice={setDevice}
+                editing={editing}
+                deviceConsent={deviceConsent}
+                setDeviceConsent={setDeviceConsent}
+              />
             ) : null}
             <div className="device-list">
               {workshop.data.devices.length ? (
                 workshop.data.devices.map((d) => (
-                  <article key={d.id}>
-                    <Icon
-                      name={appliances.find((a) => a.id === d.category)!.icon}
-                      size={34}
-                    />
-                    <div>
-                      <h3>{d.name}</h3>
-                      <p>{d.model || "Model not added"}</p>
-                      {d.careDate ? (
-                        <p>
-                          Care date: {d.careDate} · {careStatus(d)}
-                        </p>
-                      ) : null}
-                      {d.lastCared ? (
-                        <p>Last care recorded: {d.lastCared}</p>
-                      ) : null}
-                      {d.careIntervalDays ? (
-                        <p>
-                          Repeats {d.careIntervalDays} days after completion
-                        </p>
-                      ) : null}
-                    </div>
-                    <button
-                      className="text-button"
-                      onClick={() => onStart(d.category, d.model)}
-                    >
-                      Troubleshoot
-                    </button>
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        setDevice({ ...d });
-                        setEditing(d.id);
-                        setAdding(true);
-                        setDeviceConsent(true);
-                        requestAnimationFrame(() =>
-                          document
-                            .querySelector<HTMLInputElement>(
-                              ".device-form input",
-                            )
-                            ?.focus(),
-                        );
-                      }}
-                    >
-                      Edit appliance
-                    </button>
-                    {d.careDate ? (
-                      <button
-                        className="text-button"
-                        onClick={() => workshop.completeCare(d.id)}
-                      >
-                        Mark care done
-                      </button>
-                    ) : null}
-                    <button
-                      className="icon-button"
-                      aria-label={`Remove ${d.name}`}
-                      onClick={() => workshop.deleteDevice(d.id)}
-                    >
-                      <Icon name="close" size={17} />
-                    </button>
-                  </article>
+                  <DeviceCard
+                    key={d.id}
+                    d={d}
+                    workshop={workshop}
+                    onStart={onStart}
+                    onEdit={(device) => {
+                      setDevice({ ...device });
+                      setEditing(device.id);
+                      setAdding(true);
+                      setDeviceConsent(true);
+                      requestAnimationFrame(() =>
+                        document
+                          .querySelector<HTMLInputElement>(".device-form input")
+                          ?.focus(),
+                      );
+                    }}
+                    onHistory={(device) => {
+                      setTab("Case history");
+                      setSearch(device.model || device.category);
+                    }}
+                  />
                 ))
               ) : (
                 <div className="empty-state">
@@ -480,6 +369,7 @@ export function Workspace({
                   </button>
                   {expanded === c.id ? (
                     <div className="case-body">
+                      <Handoff text={summary(c, c.result)} />
                       {c.imported ? (
                         <p className="field-note">
                           Imported archive — not a fresh analysis. Its contents
@@ -490,15 +380,15 @@ export function Workspace({
                         <p className="field-note">{c.result.notice}</p>
                       ) : null}
                       <p>{c.notes}</p>
-                      {c.result.hypotheses.map((h) => (
-                        <p key={h.title}>
+                      {c.result.hypotheses.map((h, i) => (
+                        <p key={`hypothesis-${i}`}>
                           <strong>{h.title}</strong> — {h.reason} Uncertainty:{" "}
                           {h.uncertainty}
                         </p>
                       ))}
                       <ul>
-                        {c.result.checks.map((s) => (
-                          <li key={s}>{s}</li>
+                        {c.result.checks.map((s, i) => (
+                          <li key={`item-${i}`}>{s}</li>
                         ))}
                       </ul>
                       <div className="case-actions">
@@ -601,6 +491,7 @@ export function Workspace({
                 evidence for AI results.
               </p>
             </div>
+            <ManualLibrary />
             <div className="manual-links">
               {manuals.map((m) => (
                 <a href={m.url} key={m.name} target="_blank" rel="noreferrer">
@@ -624,7 +515,7 @@ export function Workspace({
                 ],
                 [
                   "Know the limits",
-                  "AI suggestions are unverified possibilities. No model-specific manual has been retrieved. Never use AI output as proof that an appliance is safe.",
+                  "AI suggestions are unverified possibilities. Only exact-model manual passages you choose can support citations. Never use AI output as proof that an appliance is safe.",
                 ],
               ].map(([title, text]) => (
                 <details key={title}>
@@ -638,7 +529,15 @@ export function Workspace({
             </div>
           </>
         ) : null}
-        {tab === "Backup & data" ? <BackupPanel workshop={workshop} /> : null}
+        {tab === "Tools" ? <CareTools /> : null}
+        {tab === "Backup & data" ? (
+          <>
+            <Suspense fallback={<p>Loading account…</p>}>
+              <AccountPanel workshop={workshop} />
+            </Suspense>
+            <BackupPanel workshop={workshop} />
+          </>
+        ) : null}
       </div>
       {workshop.error ? (
         <p role="alert" className="error-message">
@@ -646,8 +545,9 @@ export function Workspace({
         </p>
       ) : null}
       <p className="field-note">
-        Saved records stay on this device’s browser. No account or cross-device
-        sync. Clearing browser data removes them.
+        Records stay on this browser unless you choose an account and upload a
+        cloud copy in Backup & data. Clearing browser data removes local
+        records, receipts and manuals.
       </p>
     </section>
   );

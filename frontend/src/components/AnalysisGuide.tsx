@@ -1,11 +1,18 @@
+import { StepEvidence } from "./StepEvidence";
+import { StepSafety } from "./StepSafety";
+import { StepAppliance } from "./StepAppliance";
+import { useAnalysis } from "../useAnalysis";
+import { manuals } from "../local-files";
+import { retrieve } from "../../../shared/retrieval";
+import { GuideResult } from "./GuideResult";
+import { Handoff } from "./Handoff";
+import { language } from "./Preferences";
+import { attemptsUsed, takeAttempt } from "../attempts";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { appliances, symptoms } from "../diagnostics";
 import {
   mustStop,
-  analysisSchema,
   safetyResult,
   rulesResult,
-  type Analysis,
   type AnalysisRequest,
 } from "../../../shared/analysis";
 import { downloadText, summary, type Workshop } from "../workshop";
@@ -16,17 +23,27 @@ export function AnalysisGuide({
   initialAppliance,
   initialModel,
   initialPhoto = "",
+  initialDeviceId,
+  explicitAppliance = false,
   initialIssue = "",
   onClose,
   workshop,
 }: {
   initialAppliance: string;
   initialModel: string;
+  initialDeviceId?: string;
+  explicitAppliance?: boolean;
   initialPhoto?: string;
   initialIssue?: string;
   onClose: () => void;
   workshop: Workshop;
 }) {
+  const [lang, setLang] = useState(language);
+  useEffect(() => {
+    const change = () => setLang(language());
+    window.addEventListener("reparo-language", change);
+    return () => window.removeEventListener("reparo-language", change);
+  }, []);
   const [input, setInput] = useState<AnalysisRequest>({
     appliance: initialAppliance as AnalysisRequest["appliance"],
     symptom: "",
@@ -37,18 +54,18 @@ export function AnalysisGuide({
     consent: true,
     mode: "ai",
     photo: initialPhoto || undefined,
+    deviceId: initialDeviceId,
   });
-  const [step, setStep] = useState(initialPhoto ? 1 : 0),
+  const [step, setStep] = useState(initialPhoto || explicitAppliance ? 1 : 0),
     [safetyAnswered, setSafetyAnswered] = useState(false),
     [consent, setConsent] = useState(false),
     [saveConsent, setSaveConsent] = useState(false),
     [saved, setSaved] = useState(false);
-  const [result, setResult] = useState<Analysis | null>(null),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [photoError, setPhotoError] = useState("");
+  const { result, setResult, busy, setBusy, error, setError, draft, read } =
+    useAnalysis();
+  const [photoError, setPhotoError] = useState("");
+  const [useManuals, setUseManuals] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
-  const aiAttempts = useRef(0);
   const dialog = useRef<HTMLDialogElement>(null),
     heading = useRef<HTMLHeadingElement>(null),
     abort = useRef<AbortController | null>(null);
@@ -72,7 +89,7 @@ export function AnalysisGuide({
       move(3);
       return;
     }
-    if (input.mode === "rules" || aiAttempts.current >= 3) {
+    if (input.mode === "rules" || attemptsUsed() >= 3) {
       setResult(
         rulesResult(
           input,
@@ -84,27 +101,44 @@ export function AnalysisGuide({
       move(3);
       return;
     }
-    aiAttempts.current++;
+    if (!takeAttempt()) return;
     setBusy(true);
+    move(2);
     const controller = new AbortController();
     abort.current = controller;
     const timer = setTimeout(() => controller.abort(), 30000);
     try {
+      const manualPassages = useManuals
+        ? retrieve(
+            await manuals(),
+            input.model,
+            `${input.symptom} ${input.notes}`,
+          )
+        : [];
       const response = await fetch("/api/analyze", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/x-ndjson",
+        },
+        body: JSON.stringify({ ...input, manualPassages }),
         signal: controller.signal,
       });
-      const payload = await response.json().catch(() => ({
-        error: "The AI service is unavailable. Try again after deployment.",
-      }));
-      if (!response.ok)
-        throw new Error(payload.error || "Analysis failed. Please try again.");
-      setResult(analysisSchema.parse(payload));
+      if (!response.ok) {
+        const payload = await response
+          .json()
+          .catch(() => ({ error: "AI unavailable." }));
+        throw new Error(payload.error || "Analysis failed.");
+      }
+      setResult(await read(response));
       move(3);
     } catch (e) {
       if (dialog.current?.open) {
+        setError(
+          e instanceof Error && e.name !== "AbortError"
+            ? e.message
+            : "AI timed out. Your observations are available to download.",
+        );
         setResult(
           rulesResult(
             input,
@@ -191,266 +225,59 @@ export function AnalysisGuide({
           ))}
         </div>
         <form onSubmit={submit}>
-          <h2 id="dialog-title" ref={heading} tabIndex={-1}>
+          <h2 lang={lang} id="dialog-title" ref={heading} tabIndex={-1}>
             {
-              [
-                "What needs a little care?",
-                "First, a moment for safety.",
-                "Build a clearer picture.",
-                result?.stop
-                  ? "Let’s put safety first."
-                  : result?.mode === "rules"
-                    ? "A safe place to start."
-                    : "Here’s what the evidence suggests.",
-              ][step]
+              (lang === "hi"
+                ? [
+                    "किस उपकरण में समस्या है?",
+                    "पहले सुरक्षा की जाँच।",
+                    "आपने क्या देखा?",
+                    result?.stop
+                      ? "रुकें और सहायता लें।"
+                      : "आपके लिए मार्गदर्शन।",
+                  ]
+                : [
+                    "What needs a little care?",
+                    "First, a moment for safety.",
+                    "Build a clearer picture.",
+                    result?.stop
+                      ? "Let’s put safety first."
+                      : result?.mode === "rules"
+                        ? "A safe place to start."
+                        : "Here’s what the evidence suggests.",
+                  ])[step]
             }
           </h2>
           {step === 0 ? (
-            <>
-              <p>
-                Select an appliance. A model number helps describe context, but
-                does not verify manual compatibility.
-              </p>
-              <div className="dialog-options">
-                {appliances.map((a) => (
-                  <label
-                    className={`option ${input.appliance === a.id ? "selected" : ""}`}
-                    key={a.id}
-                  >
-                    <input
-                      type="radio"
-                      name="appliance"
-                      checked={input.appliance === a.id}
-                      onChange={() =>
-                        setInput({
-                          ...input,
-                          appliance: a.id as AnalysisRequest["appliance"],
-                          symptom: "",
-                          answers: {},
-                        })
-                      }
-                    />
-                    <Icon name={a.icon} />
-                    {a.name}
-                  </label>
-                ))}
-              </div>
-              <label className="field-label" htmlFor="model">
-                Brand / model (optional)
-              </label>
-              <input
-                id="model"
-                maxLength={120}
-                value={input.model}
-                onChange={(e) => setInput({ ...input, model: e.target.value })}
-              />
-            </>
+            <StepAppliance input={input} setInput={setInput} />
           ) : null}
           {step === 1 ? (
-            <>
-              {initialPhoto ? (
-                <p className="repair-photo-note">
-                  Camera frame attached. Confirm safety first; then describe the
-                  symptom for the identified{" "}
-                  {appliances
-                    .find((a) => a.id === input.appliance)
-                    ?.name.toLowerCase()}
-                  .
-                </p>
-              ) : null}
-              <p>
-                Have you noticed smoke, burning, sparks, electric shock, a gas
-                or refrigerant leak, exposed wiring, or water near electricity?
-              </p>
-              <fieldset className="safety-options">
-                <legend className="sr-only">Hazard signs</legend>
-                {(
-                  [
-                    ["yes", "Yes, a warning sign is present"],
-                    ["no", "No, none of these are present"],
-                    ["unsure", "I’m not sure"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <label className="option" key={value}>
-                    <input
-                      required
-                      type="radio"
-                      name="safety"
-                      checked={safetyAnswered && input.safety === value}
-                      onChange={() => {
-                        setInput({ ...input, safety: value });
-                        setSafetyAnswered(true);
-                      }}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </fieldset>
-              <p className="field-note">
-                If danger is immediate, leave the area and contact local
-                emergency services.
-              </p>
-            </>
+            <StepSafety
+              input={input}
+              setInput={setInput}
+              initialPhoto={initialPhoto}
+              lang={lang}
+              safetyAnswered={safetyAnswered}
+              setSafetyAnswered={setSafetyAnswered}
+            />
           ) : null}
           {step === 2 ? (
-            <>
-              <fieldset className="safety-options">
-                <legend>Choose your guide</legend>
-                <label className="option">
-                  <input
-                    type="radio"
-                    name="guide-mode"
-                    checked={input.mode === "ai"}
-                    onChange={() => setInput({ ...input, mode: "ai" })}
-                  />
-                  Free-tier AI (limited availability)
-                </label>
-                <label className="option">
-                  <input
-                    type="radio"
-                    name="guide-mode"
-                    checked={input.mode === "rules"}
-                    onChange={() =>
-                      setInput({ ...input, mode: "rules", photo: undefined })
-                    }
-                  />
-                  Basic guide — runs on this device, no AI or key
-                </label>
-              </fieldset>
-              <label className="field-label" htmlFor="symptom">
-                Main symptom
-              </label>
-              <select
-                id="symptom"
-                required
-                value={input.symptom}
-                onChange={(e) =>
-                  setInput({ ...input, symptom: e.target.value })
-                }
-              >
-                <option value="">Choose a symptom</option>
-                {symptoms[input.appliance].map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-              <label className="field-label" htmlFor="notes">
-                What have you noticed?
-              </label>
-              <textarea
-                id="notes"
-                required
-                rows={3}
-                maxLength={2000}
-                value={input.notes}
-                onChange={(e) => setInput({ ...input, notes: e.target.value })}
-                placeholder="When did it start? Any visible error codes? Describe only what you already observed."
-              />
-              <label className="field-label" htmlFor="photo">
-                External photo (optional)
-              </label>
-              <input
-                id="photo"
-                disabled={input.mode === "rules" || photoBusy}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => void loadPhoto(e.target.files?.[0])}
-              />
-              <p className="field-note">
-                Exterior or display only. Do not open or run the appliance for a
-                photo. Images are resized and metadata removed before sending.
-                No image is saved in your history.
-              </p>
-              {photoError ? <p role="alert">{photoError}</p> : null}
-              {input.photo ? (
-                <div className="photo-preview">
-                  <img src={input.photo} alt="Selected appliance evidence" />
-                  <button
-                    type="button"
-                    className="text-button"
-                    onClick={() => setInput({ ...input, photo: undefined })}
-                  >
-                    Remove photo
-                  </button>
-                </div>
-              ) : null}
-              {input.mode === "ai" ? (
-                <label className="consent">
-                  <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(e) => setConsent(e.target.checked)}
-                    required
-                  />
-                  I agree to send these observations and the optional photo to
-                  Google’s Gemini API free tier. Google may use inputs and
-                  outputs to improve its products, and human review may occur.
-                  Do not include private or sensitive information. Free quota
-                  limits apply; basic guidance is used if AI is unavailable.
-                </label>
-              ) : null}
-            </>
+            <StepEvidence
+              input={input}
+              setInput={setInput}
+              photoBusy={photoBusy}
+              loadPhoto={loadPhoto}
+              photoError={photoError}
+              lang={lang}
+              useManuals={useManuals}
+              setUseManuals={setUseManuals}
+              consent={consent}
+              setConsent={setConsent}
+            />
           ) : null}
           {step === 3 && result ? (
             <>
-              <div className={`result-tag ${result.stop ? "stop" : ""}`}>
-                {result.stop
-                  ? "Stop & seek professional help"
-                  : result.mode === "rules"
-                    ? "Basic guidance · No AI analysis"
-                    : "AI hypotheses · Unverified · Not a diagnosis"}
-              </div>
-              {result.notice ? (
-                <p className="field-note" role="status">
-                  {result.notice}
-                </p>
-              ) : null}
-              <div className="result">
-                {result.observations.length ? (
-                  <>
-                    <h3>What was observed</h3>
-                    <ul>
-                      {result.observations.map((s) => (
-                        <li key={s}>{s}</li>
-                      ))}
-                    </ul>
-                  </>
-                ) : null}
-                {result.hypotheses.length ? (
-                  <>
-                    <h3>Possible explanations</h3>
-                    {result.hypotheses.map((h, i) => (
-                      <article className="hypothesis" key={h.title}>
-                        <span className="eyebrow">POSSIBILITY 0{i + 1}</span>
-                        <h4>{h.title}</h4>
-                        <p>{h.reason}</p>
-                        <p className="field-note">
-                          Uncertainty: {h.uncertainty}
-                        </p>
-                      </article>
-                    ))}
-                  </>
-                ) : !result.stop ? (
-                  <p>There is not enough evidence to suggest a cause.</p>
-                ) : null}
-                <h3>{result.stop ? "Stop conditions" : "Safe next steps"}</h3>
-                <ol>
-                  {result.checks.map((s) => (
-                    <li key={s}>{s}</li>
-                  ))}
-                </ol>
-                {result.unknowns.length ? (
-                  <details>
-                    <summary>
-                      What is still unknown <Icon name="plus" size={16} />
-                    </summary>
-                    <ul>
-                      {result.unknowns.map((s) => (
-                        <li key={s}>{s}</li>
-                      ))}
-                    </ul>
-                  </details>
-                ) : null}
-              </div>
+              <GuideResult result={result} />
               <RepairGuide
                 key={`${input.appliance}-${result.mode}`}
                 appliance={input.appliance}
@@ -463,7 +290,7 @@ export function AnalysisGuide({
                     Optional. Do not run or open the appliance to answer.
                   </p>
                   {result.questions.map((q, i) => (
-                    <label className="field-label" key={q}>
+                    <label className="field-label" key={`question-${i}`}>
                       {q}
                       <input
                         maxLength={400}
@@ -492,6 +319,7 @@ export function AnalysisGuide({
                   </button>
                 </fieldset>
               ) : null}
+              <Handoff text={summary(input, result)} />
               <label className="consent">
                 <input
                   type="checkbox"
@@ -517,9 +345,25 @@ export function AnalysisGuide({
             </>
           ) : null}
           {busy ? (
-            <p className="loading" role="status">
-              Reviewing your evidence… This can take up to 25 seconds.
-            </p>
+            <div className="loading" role="status">
+              <p>
+                Safety checked. Reviewing your evidence and validating the
+                response…
+              </p>
+              {draft.length ? (
+                <div>
+                  <p>
+                    Provisional possibilities · awaiting final safety validation
+                  </p>
+                  {draft.map((h, i) => (
+                    <article key={`draft-${i}`}>
+                      <h4>{h.title}</h4>
+                      <p>{h.reason}</p>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ) : null}
           {error ? (
             <p className="error-message" role="alert">

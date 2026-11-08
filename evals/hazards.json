@@ -1,0 +1,637 @@
+[
+  {
+    "id": "h001",
+    "text": "smoke from washer",
+    "hazard": true
+  },
+  {
+    "id": "h002",
+    "text": "white smoke",
+    "hazard": true
+  },
+  {
+    "id": "h003",
+    "text": "smoky room",
+    "hazard": true
+  },
+  {
+    "id": "h004",
+    "text": "smoking motor",
+    "hazard": true
+  },
+  {
+    "id": "h005",
+    "text": "burning smell",
+    "hazard": true
+  },
+  {
+    "id": "h006",
+    "text": "burnt wire odor",
+    "hazard": true
+  },
+  {
+    "id": "h007",
+    "text": "burned plastic",
+    "hazard": true
+  },
+  {
+    "id": "h008",
+    "text": "spark at plug",
+    "hazard": true
+  },
+  {
+    "id": "h009",
+    "text": "sparks behind drum",
+    "hazard": true
+  },
+  {
+    "id": "h010",
+    "text": "sparking socket",
+    "hazard": true
+  },
+  {
+    "id": "h011",
+    "text": "fire behind fridge",
+    "hazard": true
+  },
+  {
+    "id": "h012",
+    "text": "flames underneath",
+    "hazard": true
+  },
+  {
+    "id": "h013",
+    "text": "electric shock",
+    "hazard": true
+  },
+  {
+    "id": "h014",
+    "text": "shocks when touched",
+    "hazard": true
+  },
+  {
+    "id": "h015",
+    "text": "got shocked",
+    "hazard": true
+  },
+  {
+    "id": "h016",
+    "text": "electrocuted",
+    "hazard": true
+  },
+  {
+    "id": "h017",
+    "text": "gas leak",
+    "hazard": true
+  },
+  {
+    "id": "h018",
+    "text": "gas smell",
+    "hazard": true
+  },
+  {
+    "id": "h019",
+    "text": "suspected gas",
+    "hazard": true
+  },
+  {
+    "id": "h020",
+    "text": "carbon monoxide alarm",
+    "hazard": true
+  },
+  {
+    "id": "h021",
+    "text": "refrigerant leak",
+    "hazard": true
+  },
+  {
+    "id": "h022",
+    "text": "refrigerant escaping",
+    "hazard": true
+  },
+  {
+    "id": "h023",
+    "text": "flooded floor",
+    "hazard": true
+  },
+  {
+    "id": "h024",
+    "text": "flood around washer",
+    "hazard": true
+  },
+  {
+    "id": "h025",
+    "text": "overheating motor",
+    "hazard": true
+  },
+  {
+    "id": "h026",
+    "text": "overheats after use",
+    "hazard": true
+  },
+  {
+    "id": "h027",
+    "text": "hot to touch",
+    "hazard": true
+  },
+  {
+    "id": "h028",
+    "text": "hot to the touch",
+    "hazard": true
+  },
+  {
+    "id": "h029",
+    "text": "too hot to approach",
+    "hazard": true
+  },
+  {
+    "id": "h030",
+    "text": "melted plastic",
+    "hazard": true
+  },
+  {
+    "id": "h031",
+    "text": "melting plastic",
+    "hazard": true
+  },
+  {
+    "id": "h032",
+    "text": "plastic is melted",
+    "hazard": true
+  },
+  {
+    "id": "h033",
+    "text": "plastic started melting",
+    "hazard": true
+  },
+  {
+    "id": "h034",
+    "text": "crackling sound",
+    "hazard": true
+  },
+  {
+    "id": "h035",
+    "text": "crackles near cable",
+    "hazard": true
+  },
+  {
+    "id": "h036",
+    "text": "electrical smell",
+    "hazard": true
+  },
+  {
+    "id": "h037",
+    "text": "electrical odor",
+    "hazard": true
+  },
+  {
+    "id": "h038",
+    "text": "electrical odour",
+    "hazard": true
+  },
+  {
+    "id": "h039",
+    "text": "breaker keeps tripping",
+    "hazard": true
+  },
+  {
+    "id": "h040",
+    "text": "breaker trips",
+    "hazard": true
+  },
+  {
+    "id": "h041",
+    "text": "rcd tripping",
+    "hazard": true
+  },
+  {
+    "id": "h042",
+    "text": "fuse blows",
+    "hazard": true
+  },
+  {
+    "id": "h043",
+    "text": "fuse keeps blowing",
+    "hazard": true
+  },
+  {
+    "id": "h044",
+    "text": "tripping the breaker",
+    "hazard": true
+  },
+  {
+    "id": "h045",
+    "text": "blowing fuse",
+    "hazard": true
+  },
+  {
+    "id": "h046",
+    "text": "frayed cord",
+    "hazard": true
+  },
+  {
+    "id": "h047",
+    "text": "damaged cord",
+    "hazard": true
+  },
+  {
+    "id": "h048",
+    "text": "exposed wire",
+    "hazard": true
+  },
+  {
+    "id": "h049",
+    "text": "split cable",
+    "hazard": true
+  },
+  {
+    "id": "h050",
+    "text": "bare wiring",
+    "hazard": true
+  },
+  {
+    "id": "h051",
+    "text": "cord is frayed",
+    "hazard": true
+  },
+  {
+    "id": "h052",
+    "text": "cable damaged",
+    "hazard": true
+  },
+  {
+    "id": "h053",
+    "text": "wire exposed",
+    "hazard": true
+  },
+  {
+    "id": "h054",
+    "text": "cord has split",
+    "hazard": true
+  },
+  {
+    "id": "h055",
+    "text": "wire is bare",
+    "hazard": true
+  },
+  {
+    "id": "h056",
+    "text": "water near outlet",
+    "hazard": true
+  },
+  {
+    "id": "h057",
+    "text": "water at socket",
+    "hazard": true
+  },
+  {
+    "id": "h058",
+    "text": "leaking near electric plug",
+    "hazard": true
+  },
+  {
+    "id": "h059",
+    "text": "puddle by outlet",
+    "hazard": true
+  },
+  {
+    "id": "h060",
+    "text": "wet electric socket",
+    "hazard": true
+  },
+  {
+    "id": "h061",
+    "text": "outlet in a puddle",
+    "hazard": true
+  },
+  {
+    "id": "h062",
+    "text": "plug wet",
+    "hazard": true
+  },
+  {
+    "id": "h063",
+    "text": "socket has water",
+    "hazard": true
+  },
+  {
+    "id": "h064",
+    "text": "bypass door lock",
+    "hazard": true
+  },
+  {
+    "id": "h065",
+    "text": "bypass the guard",
+    "hazard": true
+  },
+  {
+    "id": "h066",
+    "text": "bypass interlock",
+    "hazard": true
+  },
+  {
+    "id": "h067",
+    "text": "microwave internal capacitor",
+    "hazard": true
+  },
+  {
+    "id": "h068",
+    "text": "microwave inside repair",
+    "hazard": true
+  },
+  {
+    "id": "h069",
+    "text": "arcing at motor",
+    "hazard": true
+  },
+  {
+    "id": "h070",
+    "text": "an arc at plug",
+    "hazard": true
+  },
+  {
+    "id": "h071",
+    "text": "arcs in the socket",
+    "hazard": true
+  },
+  {
+    "id": "h072",
+    "text": "smoke stopped now",
+    "hazard": true
+  },
+  {
+    "id": "h073",
+    "text": "no smoke but cable is frayed",
+    "hazard": true
+  },
+  {
+    "id": "h074",
+    "text": "not sure about gas leak",
+    "hazard": true
+  },
+  {
+    "id": "h075",
+    "text": "only a small spark",
+    "hazard": true
+  },
+  {
+    "id": "h076",
+    "text": "faint electrical smell",
+    "hazard": true
+  },
+  {
+    "id": "h077",
+    "text": "tiny puddle next to outlet",
+    "hazard": true
+  },
+  {
+    "id": "h078",
+    "text": "burning after two minutes",
+    "hazard": true
+  },
+  {
+    "id": "h079",
+    "text": "cable feels hot to touch",
+    "hazard": true
+  },
+  {
+    "id": "h080",
+    "text": "breaker tripped yesterday",
+    "hazard": true
+  },
+  {
+    "id": "h081",
+    "text": "धुआं निकल रहा है",
+    "hazard": true
+  },
+  {
+    "id": "h082",
+    "text": "धुआँ आ रहा है",
+    "hazard": true
+  },
+  {
+    "id": "h083",
+    "text": "चिंगारी दिख रही है",
+    "hazard": true
+  },
+  {
+    "id": "h084",
+    "text": "करंट लगा",
+    "hazard": true
+  },
+  {
+    "id": "h085",
+    "text": "गैस की गंध",
+    "hazard": true
+  },
+  {
+    "id": "h086",
+    "text": "जलने की गंध आ रही है",
+    "hazard": true
+  },
+  {
+    "id": "h087",
+    "text": "ब्रेकर ट्रिप हो रहा है",
+    "hazard": true
+  },
+  {
+    "id": "b001",
+    "text": "door gasket",
+    "hazard": false
+  },
+  {
+    "id": "b002",
+    "text": "gasket looks loose",
+    "hazard": false
+  },
+  {
+    "id": "b003",
+    "text": "replaceable gasket label",
+    "hazard": false
+  },
+  {
+    "id": "b004",
+    "text": "burnt toast smell",
+    "hazard": false
+  },
+  {
+    "id": "b005",
+    "text": "burned toast smell",
+    "hazard": false
+  },
+  {
+    "id": "b006",
+    "text": "burnt toast smell from toast only",
+    "hazard": false
+  },
+  {
+    "id": "b007",
+    "text": "display reads E02",
+    "hazard": false
+  },
+  {
+    "id": "b008",
+    "text": "washer will not start",
+    "hazard": false
+  },
+  {
+    "id": "b009",
+    "text": "fan airflow weak",
+    "hazard": false
+  },
+  {
+    "id": "b010",
+    "text": "door not sealing",
+    "hazard": false
+  },
+  {
+    "id": "b011",
+    "text": "fridge not cooling",
+    "hazard": false
+  },
+  {
+    "id": "b012",
+    "text": "unusual noise",
+    "hazard": false
+  },
+  {
+    "id": "b013",
+    "text": "display blank",
+    "hazard": false
+  },
+  {
+    "id": "b014",
+    "text": "door appears closed",
+    "hazard": false
+  },
+  {
+    "id": "b015",
+    "text": "delay timer visible",
+    "hazard": false
+  },
+  {
+    "id": "b016",
+    "text": "food blocks door",
+    "hazard": false
+  },
+  {
+    "id": "b017",
+    "text": "model W123",
+    "hazard": false
+  },
+  {
+    "id": "b018",
+    "text": "plastic handle intact",
+    "hazard": false
+  },
+  {
+    "id": "b019",
+    "text": "cord looks intact",
+    "hazard": false
+  },
+  {
+    "id": "b020",
+    "text": "socket looks dry",
+    "hazard": false
+  },
+  {
+    "id": "b021",
+    "text": "maintenance due",
+    "hazard": false
+  },
+  {
+    "id": "b022",
+    "text": "filter reminder visible",
+    "hazard": false
+  },
+  {
+    "id": "b023",
+    "text": "a faint hum",
+    "hazard": false
+  },
+  {
+    "id": "b024",
+    "text": "drainage problem",
+    "hazard": false
+  },
+  {
+    "id": "b025",
+    "text": "puddle far away from appliance",
+    "hazard": false
+  },
+  {
+    "id": "b026",
+    "text": "toast is cold",
+    "hazard": false
+  },
+  {
+    "id": "b027",
+    "text": "warranty expired",
+    "hazard": false
+  },
+  {
+    "id": "b028",
+    "text": "receipt missing",
+    "hazard": false
+  },
+  {
+    "id": "b029",
+    "text": "air purifier filter reminder",
+    "hazard": false
+  },
+  {
+    "id": "b030",
+    "text": "vacuum suction weak",
+    "hazard": false
+  },
+  {
+    "id": "b031",
+    "text": "mixer jar lid is closed",
+    "hazard": false
+  },
+  {
+    "id": "b032",
+    "text": "dishwasher code shown",
+    "hazard": false
+  },
+  {
+    "id": "b033",
+    "text": "water purifier indicator",
+    "hazard": false
+  },
+  {
+    "id": "b034",
+    "text": "पंखा धीमा है",
+    "hazard": false
+  },
+  {
+    "id": "b035",
+    "text": "दरवाजा बंद है",
+    "hazard": false
+  },
+  {
+    "id": "b036",
+    "text": "मॉडल नंबर नहीं पता",
+    "hazard": false
+  },
+  {
+    "id": "b037",
+    "text": "गीला कपड़ा ड्रम में है",
+    "hazard": false
+  },
+  {
+    "id": "b038",
+    "text": "filter life indicator",
+    "hazard": false
+  },
+  {
+    "id": "b039",
+    "text": "fan speed low",
+    "hazard": false
+  },
+  {
+    "id": "b040",
+    "text": "gasket stained",
+    "hazard": false
+  }
+]

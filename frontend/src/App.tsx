@@ -1,29 +1,15 @@
-import { useState } from "react";
+import { OfflineStatus } from "./components/OfflineStatus";
+import { questions } from "./content";
+import { Preferences } from "./components/Preferences";
+import { lazy, Suspense, useState } from "react";
 import { appliances } from "./diagnostics";
 import { CameraWorkbench } from "./components/CameraWorkbench";
 import { Icon } from "./components/Icon";
 import { AnalysisGuide } from "./components/AnalysisGuide";
-import { Workspace } from "./components/Workspace";
+const Workspace = lazy(() =>
+  import("./components/Workspace").then((m) => ({ default: m.Workspace })),
+);
 import { useWorkshop } from "./workshop";
-
-const questions = [
-  [
-    "What can I try today?",
-    "Start with a camera frame or uploaded image. AI identifies the visible appliance; you confirm it, answer safety and symptom questions, and receive observations, possible causes, and supported external repair guides.",
-  ],
-  [
-    "Will Reparo tell me how to repair an appliance?",
-    "You can follow interactive guides for a few confirmed owner-level issues, such as an item blocking a refrigerator door. The guide requires you to confirm the condition and check your model manual. Hazardous electrical, gas, refrigerant, microwave, or internal repairs require a qualified technician.",
-  ],
-  [
-    "Can I use my camera or a live feed?",
-    "Yes. Open the live camera, take a photo on your phone, or upload an image. Live analysis sends separate snapshots with your consent, up to five scans per visual session. It does not stream video continuously to AI. Audio analysis is not available yet.",
-  ],
-  [
-    "Are my answers stored?",
-    "Basic guidance runs on your device without AI. If you choose free-tier AI, observations and optional photos go directly from the server to Google’s Gemini API with your consent. Google may use free-tier inputs and outputs to improve its products. Save text cases locally only if you choose; photos are excluded from history.",
-  ],
-];
 
 export default function App() {
   const workshop = useWorkshop();
@@ -32,9 +18,14 @@ export default function App() {
   const [guidePhoto, setGuidePhoto] = useState(""),
     [guideIssue, setGuideIssue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const openGuide = (id = "washer", model = "") => {
+  const [guideDeviceId, setGuideDeviceId] = useState<string>();
+  const [explicit, setExplicit] = useState(false);
+  const dashboard = location.pathname === "/app";
+  const openGuide = (id?: string, model = "", deviceId?: string) => {
+    setExplicit(Boolean(id));
+    setGuideDeviceId(deviceId);
     setMenuOpen(false);
-    setGuide(id);
+    setGuide(id || "washer");
     setGuideModel(model);
     setGuidePhoto("");
     setGuideIssue("");
@@ -55,7 +46,7 @@ export default function App() {
         Skip to content
       </a>
       <header className="site-header">
-        <a className="wordmark" href="#" aria-label="Reparo home">
+        <a className="wordmark" href="/" aria-label="Reparo home">
           <span className="brand-symbol">r.</span>reparo
           <span className="brand-period">.</span>
         </a>
@@ -73,178 +64,205 @@ export default function App() {
           className={menuOpen ? "nav-open" : ""}
           aria-label="Main navigation"
         >
-          <a href="#camera" onClick={() => setMenuOpen(false)}>
+          <a href="/#camera" onClick={() => setMenuOpen(false)}>
             Camera repair
           </a>
-          <a href="#appliances" onClick={() => setMenuOpen(false)}>
+          <a href="/#appliances" onClick={() => setMenuOpen(false)}>
             Appliances
           </a>
-          <a href="#questions" onClick={() => setMenuOpen(false)}>
+          <a href="/#questions" onClick={() => setMenuOpen(false)}>
             Good to know
           </a>
-          <a href="#workspace" onClick={() => setMenuOpen(false)}>
+          <a href="/app" onClick={() => setMenuOpen(false)}>
             My workspace
           </a>
           <a
             className="nav-cta"
-            href="#camera"
+            href="/#camera"
             onClick={() => setMenuOpen(false)}
           >
             Scan your appliance <Icon name="camera" size={18} />
           </a>
         </nav>
       </header>
+      <Preferences />
+      <OfflineStatus />
       <main id="main">
-        <CameraWorkbench onGuide={visualGuide} onManual={() => openGuide()} />
-        <section className="principles" aria-label="Our principles">
-          <div>
-            <Icon name="shield" />
-            <span>Safety before solutions</span>
-          </div>
-          <div>
-            <Icon name="spark" />
-            <span>Clarity, without the guesswork</span>
-          </div>
-          <div>
-            <Icon name="check" />
-            <span>Care for what you already have</span>
-          </div>
-        </section>
-        <section id="appliances" className="section appliances-section">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">01 / START WITH THE EVERYDAY</p>
-              <h2>What needs a little care?</h2>
-            </div>
-            <p>
-              Familiar appliances. Unfamiliar symptoms.
-              <br />
-              Let’s take it one observation at a time.
-            </p>
-          </div>
-          <div className="appliance-list">
-            {appliances.map((item, i) => (
-              <button
-                key={item.id}
-                className="appliance-card"
-                onClick={() => openGuide(item.id)}
-              >
-                <span className="card-number">0{i + 1}</span>
-                <Icon name={item.icon} size={53} />
-                <span className="card-copy">
-                  <strong>{item.name}</strong>
-                  <span>{item.description}</span>
-                </span>
-                <Icon name="arrow" size={20} className="card-arrow" />
-              </button>
-            ))}
-          </div>
-          <div className="coverage-note">
-            <span className="status-dot" />
-            AI-assisted possibilities, clearly explained. Model-specific manual
-            verification is not yet available.
-          </div>
-        </section>
-        <Workspace workshop={workshop} onStart={openGuide} />
-        <section id="approach" className="approach section">
-          <div className="approach-intro">
-            <p className="eyebrow">
-              02 / LESS UNCERTAINTY. MORE UNDERSTANDING.
-            </p>
-            <h2>
-              Good guidance
-              <br />
-              starts with
-              <br />
-              <em>good questions.</em>
-            </h2>
-            <p>
-              You don’t need to know what’s wrong.
-              <br />
-              Just tell us what you’ve noticed.
-            </p>
-            <a className="underlined-link" href="#promise">
-              The principles behind Reparo <Icon name="arrow" size={18} />
-            </a>
-          </div>
-          <div className="steps">
-            {[
-              [
-                "01",
-                "Tell us what’s happening.",
-                "Start with your appliance and the symptoms you’ve noticed. Plain language is all you need.",
-              ],
-              [
-                "02",
-                "Pause for safety.",
-                "Warning signs come first. When something may be unsafe, the right next step is to stop and seek help.",
-              ],
-              [
-                "03",
-                "Leave with a clearer next step.",
-                "Organize your observations, understand the limits, and know when to bring in a professional.",
-              ],
-            ].map(([number, title, copy]) => (
-              <article className="step" key={number}>
-                <span>{number}</span>
+        {dashboard ? (
+          <Suspense
+            fallback={
+              <p className="section" role="status">
+                Opening workspace…
+              </p>
+            }
+          >
+            <Workspace workshop={workshop} onStart={openGuide} />
+          </Suspense>
+        ) : (
+          <>
+            <CameraWorkbench
+              onGuide={visualGuide}
+              onManual={() => openGuide()}
+            />
+            <section className="principles" aria-label="Our principles">
+              <div>
+                <Icon name="shield" />
+                <span>Safety before solutions</span>
+              </div>
+              <div>
+                <Icon name="spark" />
+                <span>Clarity, without the guesswork</span>
+              </div>
+              <div>
+                <Icon name="check" />
+                <span>Care for what you already have</span>
+              </div>
+            </section>
+            <section id="appliances" className="section appliances-section">
+              <div className="section-heading">
                 <div>
-                  <h3>{title}</h3>
-                  <p>{copy}</p>
+                  <p className="eyebrow">01 / START WITH THE EVERYDAY</p>
+                  <h2>What needs a little care?</h2>
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-        <section id="promise" className="promise">
-          <div className="promise-symbol">
-            <Icon name="shield" size={44} />
-          </div>
-          <p className="eyebrow">OUR FIRST PRINCIPLE</p>
-          <h2>
-            Some things are
-            <br />
-            better left to <em>an expert.</em>
-          </h2>
-          <p>
-            Knowing when to stop is part of good guidance. No opening live
-            appliances. No bypassing safety systems. No certainty where there
-            isn’t enough evidence.
-          </p>
-          <span className="promise-foot">
-            Your safety will always come before a diagnosis.
-          </span>
-        </section>
-        <section id="questions" className="section faq">
-          <div>
-            <p className="eyebrow">03 / A FEW THINGS TO KNOW</p>
-            <h2>A little more clarity.</h2>
-            <p>Thoughtful answers, before you begin.</p>
-          </div>
-          <div className="faq-list">
-            {questions.map(([question, answer]) => (
-              <details key={question}>
-                <summary>
-                  {question}
-                  <Icon name="plus" size={20} />
-                </summary>
-                <p>{answer}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-        <section className="closing section">
-          <div>
-            <p className="eyebrow">A SMALL FIRST STEP</p>
-            <h2>
-              Before you replace it,
-              <br />
-              <em>understand it.</em>
-            </h2>
-          </div>
-          <button className="button dark" onClick={() => openGuide()}>
-            Explore the guide <Icon name="arrow" size={20} />
-          </button>
-        </section>
+                <p>
+                  Familiar appliances. Unfamiliar symptoms.
+                  <br />
+                  Let’s take it one observation at a time.
+                </p>
+              </div>
+              <div className="appliance-list">
+                {appliances.map((item, i) => (
+                  <button
+                    key={item.id}
+                    className="appliance-card"
+                    onClick={() => openGuide(item.id)}
+                  >
+                    <span className="card-number">0{i + 1}</span>
+                    <Icon name={item.icon} size={53} />
+                    <span className="card-copy">
+                      <strong>{item.name}</strong>
+                      <span>{item.description}</span>
+                    </span>
+                    <Icon name="arrow" size={20} className="card-arrow" />
+                  </button>
+                ))}
+              </div>
+              <div className="coverage-note">
+                <span className="status-dot" />
+                AI-assisted possibilities, clearly explained. Model-specific
+                manual verification is not yet available.
+              </div>
+            </section>
+            <section className="section workspace-link">
+              <h2>Your appliances, remembered.</h2>
+              <p>
+                Keep care dates, warranty details, and repair history together.
+              </p>
+              <a href="/app" className="button dark">
+                Open my workspace →
+              </a>
+            </section>
+            <section id="approach" className="approach section">
+              <div className="approach-intro">
+                <p className="eyebrow">
+                  02 / LESS UNCERTAINTY. MORE UNDERSTANDING.
+                </p>
+                <h2>
+                  Good guidance
+                  <br />
+                  starts with
+                  <br />
+                  <em>good questions.</em>
+                </h2>
+                <p>
+                  You don’t need to know what’s wrong.
+                  <br />
+                  Just tell us what you’ve noticed.
+                </p>
+                <a className="underlined-link" href="#promise">
+                  The principles behind Reparo <Icon name="arrow" size={18} />
+                </a>
+              </div>
+              <div className="steps">
+                {[
+                  [
+                    "01",
+                    "Tell us what’s happening.",
+                    "Start with your appliance and the symptoms you’ve noticed. Plain language is all you need.",
+                  ],
+                  [
+                    "02",
+                    "Pause for safety.",
+                    "Warning signs come first. When something may be unsafe, the right next step is to stop and seek help.",
+                  ],
+                  [
+                    "03",
+                    "Leave with a clearer next step.",
+                    "Organize your observations, understand the limits, and know when to bring in a professional.",
+                  ],
+                ].map(([number, title, copy]) => (
+                  <article className="step" key={number}>
+                    <span>{number}</span>
+                    <div>
+                      <h3>{title}</h3>
+                      <p>{copy}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section id="promise" className="promise">
+              <div className="promise-symbol">
+                <Icon name="shield" size={44} />
+              </div>
+              <p className="eyebrow">OUR FIRST PRINCIPLE</p>
+              <h2>
+                Some things are
+                <br />
+                better left to <em>an expert.</em>
+              </h2>
+              <p>
+                Knowing when to stop is part of good guidance. No opening live
+                appliances. No bypassing safety systems. No certainty where
+                there isn’t enough evidence.
+              </p>
+              <span className="promise-foot">
+                Your safety will always come before a diagnosis.
+              </span>
+            </section>
+            <section id="questions" className="section faq">
+              <div>
+                <p className="eyebrow">03 / A FEW THINGS TO KNOW</p>
+                <h2>A little more clarity.</h2>
+                <p>Thoughtful answers, before you begin.</p>
+              </div>
+              <div className="faq-list">
+                {questions.map(([question, answer]) => (
+                  <details key={question}>
+                    <summary>
+                      {question}
+                      <Icon name="plus" size={20} />
+                    </summary>
+                    <p>{answer}</p>
+                  </details>
+                ))}
+              </div>
+            </section>
+            <section className="closing section">
+              <div>
+                <p className="eyebrow">A SMALL FIRST STEP</p>
+                <h2>
+                  Before you replace it,
+                  <br />
+                  <em>understand it.</em>
+                </h2>
+              </div>
+              <button className="button dark" onClick={() => openGuide()}>
+                Explore the guide <Icon name="arrow" size={20} />
+              </button>
+            </section>
+          </>
+        )}
       </main>
       <footer className="site-footer">
         <div className="footer-top">
@@ -272,6 +290,8 @@ export default function App() {
       </footer>
       {guide !== null ? (
         <AnalysisGuide
+          initialDeviceId={guideDeviceId}
+          explicitAppliance={explicit}
           initialAppliance={guide}
           initialModel={guideModel}
           initialPhoto={guidePhoto}

@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.114",
+    "@neondatabase/serverless": "^1.2.0",
     "ai": "^7.0.165",
+    "jose": "^6.2.15",
     "zod": "^4.6.7"
   }
 }

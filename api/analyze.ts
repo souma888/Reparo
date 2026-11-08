@@ -1,9 +1,11 @@
-import { analyze } from "../server/analyze.js";
-import { requestSchema, rulesResult } from "../shared/analysis.js";
+import { claimModelAttempt } from "../server/rate-limit.js";
+import { aiAvailable } from "../server/model.js";
+import { analyze, streamAnalysis } from "../server/analyze.js";
+import { requestSchema, rulesResult, mustStop } from "../shared/analysis.js";
 import { ZodError } from "zod";
 
-// A bounded per-instance abuse guard. Configure a Vercel Firewall rate-limit
-// rule for /api/analyze for distributed enforcement before broad public use.
+// Bounded per-instance provider budget, supplemented by the project’s
+// regional Vercel Firewall API ingress rule. Basic/safety requests bypass it.
 const requests = new Map<string, { count: number; until: number }>();
 export const maxDuration = 60;
 export default {
@@ -23,14 +25,6 @@ export default {
       return reply({ error: "Cross-origin requests are not allowed." }, 403);
     if (!request.headers.get("content-type")?.includes("application/json"))
       return reply({ error: "Send a JSON request." }, 415);
-    const key = request.headers.get("x-vercel-forwarded-for") || "local";
-    const now = Date.now();
-    for (const [ip, entry] of requests)
-      if (entry.until < now) requests.delete(ip);
-    const entry = requests.get(key) || { count: 0, until: now + 3600000 };
-    const limited = entry.count >= 5 || requests.size >= 10000;
-    entry.count++;
-    requests.set(key, entry);
     try {
       // Enforce actual streamed byte size, not only a client-supplied header.
       const reader = request.body?.getReader();
@@ -56,16 +50,38 @@ export default {
       const input = requestSchema.parse(
         JSON.parse(new TextDecoder().decode(bytes)),
       );
+      const key = request.headers.get("x-vercel-forwarded-for") || "local";
+      const now = Date.now();
+      for (const [ip, entry] of requests)
+        if (entry.until < now) requests.delete(ip);
+      const entry = requests.get(key) || { count: 0, until: now + 3600000 };
+      let limited = entry.count >= 5 || requests.size >= 10000;
+      if (input.mode !== "ai" || mustStop(input) || !aiAvailable())
+        return reply(await analyze(input));
+      if (!limited) limited = !(await claimModelAttempt(key, "analysis"));
+      if (!limited) {
+        entry.count++;
+        requests.set(key, entry);
+      }
+      if (
+        !limited &&
+        request.headers.get("accept")?.includes("application/x-ndjson")
+      )
+        return streamAnalysis(input);
       return reply(
         limited
           ? rulesResult(
               input,
-              "This instance’s hourly AI allowance was reached. Basic guidance remains available; no paid fallback was used.",
+              "The shared AI allowance was reached or its quota check is unavailable. Basic guidance remains available; no paid fallback was used.",
             )
           : await analyze(input),
       );
     } catch (error) {
-      if (error instanceof ZodError || error instanceof SyntaxError)
+      if (
+        error instanceof ZodError ||
+        (error instanceof Error && error.name === "$ZodError") ||
+        error instanceof SyntaxError
+      )
         return reply(
           {
             error: "Check the appliance, symptoms, safety answer, and consent.",

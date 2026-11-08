@@ -1,5 +1,10 @@
-import { z } from "zod";
-import { analysisSchema } from "../../shared/analysis";
+import * as z from "zod/mini";
+import {
+  analysisSchema,
+  bounded,
+  categories,
+  type Analysis,
+} from "../../shared/analysis";
 
 export function validDay(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -10,61 +15,66 @@ export function validDay(value: string) {
 }
 const day = z
   .string()
-  .refine(
-    (value) => value === "" || validDay(value),
-    "Use a valid calendar date",
-  );
+  .check(z.refine((v) => v === "" || validDay(v), "Use a valid calendar date"));
+const id = bounded(100).check(z.minLength(1));
 export const deviceSchema = z.object({
-  id: z.string().min(1).max(100),
-  name: z.string().trim().min(1).max(80),
-  category: z.enum(["washer", "fridge", "fan", "small"]),
-  model: z.string().max(120),
+  id,
+  name: bounded(80).check(z.trim(), z.minLength(1)),
+  category: z.enum(categories),
+  model: bounded(120),
   careDate: day,
-  careIntervalDays: z.number().int().min(0).max(3650).optional(),
-  lastCared: day.optional(),
+  careIntervalDays: z.optional(
+    z.number().check(z.int(), z.minimum(0), z.maximum(3650)),
+  ),
+  lastCared: z.optional(day),
+  purchaseDate: z.optional(day),
+  warrantyExpiry: z.optional(day),
 });
 export const caseSchema = z.object({
-  id: z.string().min(1).max(100),
+  id,
+  deviceId: z.optional(id),
   date: z.iso.datetime(),
-  appliance: z.enum(["washer", "fridge", "fan", "small"]),
-  model: z.string().max(120),
-  symptom: z.string().max(120),
-  notes: z.string().max(2000),
-  answers: z
-    .record(z.string().max(240), z.string().max(400))
-    .refine((v) => Object.keys(v).length <= 12)
-    .default({}),
-  result: analysisSchema.extend({
-    checks: z.array(z.string().max(1000)).max(10),
-  }),
+  appliance: z.enum(categories),
+  model: bounded(120),
+  symptom: bounded(120),
+  notes: bounded(2000),
+  answers: z._default(
+    z
+      .record(bounded(240), bounded(400))
+      .check(z.refine((v) => Object.keys(v).length <= 12)),
+    {},
+  ),
+  result: analysisSchema,
   status: z.enum(["open", "resolved"]),
-  rating: z.enum(["helpful", "unclear"]).optional(),
-  imported: z.boolean().optional(),
+  rating: z.optional(z.enum(["helpful", "unclear"])),
+  imported: z.optional(z.boolean()),
 });
 export const dataSchema = z
   .object({
     version: z.literal(1),
-    cases: z.array(caseSchema).max(100),
-    devices: z.array(deviceSchema).max(50),
+    cases: z.array(caseSchema).check(z.maxLength(100)),
+    devices: z.array(deviceSchema).check(z.maxLength(50)),
   })
-  .superRefine((data, context) => {
-    for (const key of ["cases", "devices"] as const)
-      if (new Set(data[key].map((item) => item.id)).size !== data[key].length)
-        context.addIssue({
-          code: "custom",
-          message: `Duplicate IDs in ${key}`,
-        });
-  });
+  .check(
+    z.refine(
+      (data) =>
+        ["cases", "devices"].every((key) => {
+          const items = data[key as "cases" | "devices"];
+          return new Set(items.map((i) => i.id)).size === items.length;
+        }),
+      "Duplicate IDs",
+    ),
+  );
 export type Device = z.infer<typeof deviceSchema>;
-export type Case = z.infer<typeof caseSchema>;
-export type WorkshopData = z.infer<typeof dataSchema>;
-const backupSchema = z
-  .object({
-    app: z.literal("reparo"),
-    exportedAt: z.iso.datetime(),
-    data: dataSchema,
-  })
-  .strict();
+export type Case = Omit<z.infer<typeof caseSchema>, "result"> & {
+  result: Analysis;
+};
+export type WorkshopData = { version: 1; cases: Case[]; devices: Device[] };
+const backupSchema = z.strictObject({
+  app: z.literal("reparo"),
+  exportedAt: z.iso.datetime(),
+  data: dataSchema,
+});
 export const maxBackupBytes = 2 * 1024 * 1024;
 export function parseBackup(text: string): WorkshopData {
   if (new TextEncoder().encode(text).byteLength > maxBackupBytes)
@@ -174,6 +184,9 @@ export function calendarEvent(device: Device) {
       .replace(/\.\d{3}/, "")}`,
     `DTSTART;VALUE=DATE:${start}`,
     `DTEND;VALUE=DATE:${end}`,
+    ...(device.careIntervalDays
+      ? [`RRULE:FREQ=DAILY;INTERVAL=${device.careIntervalDays}`]
+      : []),
     `SUMMARY:${escapeCalendar(`Care reminder: ${device.name}`)}`,
     `DESCRIPTION:${escapeCalendar("Review the manufacturer manual and arrange safe routine care. This reminder does not indicate that the appliance is safe.")}`,
     "END:VEVENT",

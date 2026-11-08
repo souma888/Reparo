@@ -94,6 +94,7 @@ export function useWorkshop() {
             id: crypto.randomUUID(),
             date: new Date().toISOString(),
             appliance: input.appliance,
+            deviceId: input.deviceId,
             model: input.model,
             symptom: input.symptom || "Safety concern",
             notes: input.notes,
@@ -158,6 +159,10 @@ export function summary(
               `Possible explanation: ${h.title}\nReason: ${h.reason}\nUncertainty: ${h.uncertainty}`,
           ),
           `Unknowns: ${result.unknowns.join("; ")}`,
+          ...(result.sources || []).map(
+            (p) =>
+              `Manual reference: ${p.title}, model ${p.model}, page ${p.page}; ${p.source || "local document"}. User-supplied applicability.`,
+          ),
           `Next steps:\n${result.checks.join("\n")}`,
           `Rules: ${result.version}; Model: ${result.model || "No AI call"}`,
         ]

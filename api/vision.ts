@@ -1,3 +1,7 @@
+import { claimModelAttempt } from "../server/rate-limit.js";
+import { aiAvailable } from "../server/model.js";
+import { hasHazard } from "../shared/analysis.js";
+import { visionRequestSchema } from "../shared/vision.js";
 import { identify } from "../server/vision.js";
 import { ZodError } from "zod";
 export const maxDuration = 40;
@@ -13,18 +17,6 @@ export default {
       return reply({ error: "Cross-origin requests are not allowed." }, 403);
     if (!request.headers.get("content-type")?.includes("application/json"))
       return reply({ error: "Use JSON." }, 415);
-    const now = Date.now();
-    for (const [key, value] of hits) if (value.until < now) hits.delete(key);
-    const ip = request.headers.get("x-vercel-forwarded-for") || "local";
-    const entry = hits.get(ip) || { count: 0, until: now + 3600000 };
-    if (entry.count >= 20 || hits.size >= 10000)
-      return reply(
-        {
-          error:
-            "Visual scan allowance reached. Wait for the hourly reset or choose your device manually.",
-        },
-        429,
-      );
     try {
       const reader = request.body?.getReader();
       if (!reader) return reply({ error: "An image is required." }, 400);
@@ -49,11 +41,36 @@ export default {
         bytes.set(chunk, offset);
         offset += chunk.length;
       }
+      const input = visionRequestSchema.parse(
+        JSON.parse(new TextDecoder().decode(bytes)),
+      );
+      if (hasHazard(input.issue) || !aiAvailable())
+        return reply(await identify(input));
+      const now = Date.now();
+      for (const [key, entry] of hits) if (entry.until < now) hits.delete(key);
+      const ip = request.headers.get("x-vercel-forwarded-for") || "local";
+      const entry = hits.get(ip) || { count: 0, until: now + 3600000 };
+      if (
+        entry.count >= 20 ||
+        hits.size >= 10000 ||
+        !(await claimModelAttempt(ip, "vision"))
+      )
+        return reply(
+          {
+            error:
+              "Visual AI allowance reached or quota check unavailable. Choose your device manually or try later.",
+          },
+          429,
+        );
       entry.count++;
       hits.set(ip, entry);
-      return reply(await identify(JSON.parse(new TextDecoder().decode(bytes))));
+      return reply(await identify(input));
     } catch (error) {
-      if (error instanceof ZodError || error instanceof SyntaxError)
+      if (
+        error instanceof ZodError ||
+        (error instanceof Error && error.name === "$ZodError") ||
+        error instanceof SyntaxError
+      )
         return reply(
           { error: "Choose a valid photo and confirm AI consent." },
           400,
