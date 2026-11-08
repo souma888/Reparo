@@ -9,7 +9,13 @@ import { ManualLibrary } from "./ManualLibrary";
 import { Handoff } from "./Handoff";
 import { useState, type FormEvent } from "react";
 import { appliances } from "../diagnostics";
-import { downloadText, summary, type Workshop, type Device } from "../workshop";
+import {
+  downloadText,
+  summary,
+  technicianBrief,
+  type Workshop,
+  type Device,
+} from "../workshop";
 import { Icon } from "./Icon";
 import { BackupPanel } from "./BackupPanel";
 import { calendarEvent, careStatus } from "../workshop-data";
@@ -369,7 +375,10 @@ export function Workspace({
                   </button>
                   {expanded === c.id ? (
                     <div className="case-body">
-                      <Handoff text={summary(c, c.result)} />
+                      <Handoff
+                        text={summary(c, c.result)}
+                        brief={technicianBrief(c, c.result)}
+                      />
                       {c.imported ? (
                         <p className="field-note">
                           Imported archive — not a fresh analysis. Its contents

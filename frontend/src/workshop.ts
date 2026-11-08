@@ -170,3 +170,32 @@ export function summary(
     "Informational guidance only. Have a qualified technician assess persistent symptoms.",
   ].join("\n\n");
 }
+
+// Bounded print brief keeps safety and approved next steps ahead of lengthy notes.
+export function technicianBrief(
+  input: Pick<AnalysisRequest, "appliance" | "model" | "symptom" | "notes">,
+  result: Analysis,
+) {
+  const short = (text: string, max: number) =>
+    text.replace(/\s+/g, " ").trim().slice(0, max);
+  return [
+    "REPARO — TECHNICIAN BRIEF",
+    `Appliance: ${input.appliance} · Model: ${short(input.model || "Unknown", 100)}`,
+    `Safety: ${result.stop ? "STOP — do not use; emergency/professional help required" : "No reported hazard; not a safety certification"}`,
+    `Symptom: ${short(input.symptom, 120)}`,
+    `Notes: ${short(input.notes || "None", 350)}`,
+    "APPROVED NEXT STEPS",
+    ...result.checks.slice(0, 3).map((s) => short(s, 300)),
+    "EVIDENCE",
+    ...result.observations.slice(0, 3).map((s) => short(s, 150)),
+    ...result.hypotheses
+      .slice(0, 2)
+      .map(
+        (h) =>
+          `Unverified possibility: ${short(h.title, 90)} — ${short(h.reason, 140)}`,
+      ),
+    `Unknowns: ${short(result.unknowns.join("; "), 240)}`,
+    `Mode: ${result.mode} · Rules: ${result.version}`,
+    "Condensed one-page brief. Use the downloaded text summary for all observations and citations. Guidance is informational; persistent faults need a qualified technician.",
+  ].join("\n\n");
+}

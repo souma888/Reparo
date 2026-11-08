@@ -15,7 +15,12 @@ import {
   rulesResult,
   type AnalysisRequest,
 } from "../../../shared/analysis";
-import { downloadText, summary, type Workshop } from "../workshop";
+import {
+  downloadText,
+  summary,
+  technicianBrief,
+  type Workshop,
+} from "../workshop";
 import { Icon } from "./Icon";
 import { RepairGuide } from "./RepairGuide";
 
@@ -319,7 +324,10 @@ export function AnalysisGuide({
                   </button>
                 </fieldset>
               ) : null}
-              <Handoff text={summary(input, result)} />
+              <Handoff
+                text={summary(input, result)}
+                brief={technicianBrief(input, result)}
+              />
               <label className="consent">
                 <input
                   type="checkbox"

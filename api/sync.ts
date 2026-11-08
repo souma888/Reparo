@@ -22,7 +22,13 @@ export async function authenticatedUser(request: Request) {
     algorithms: ["EdDSA"],
     requiredClaims: ["sub", "exp", "iat"],
   });
-  if (!payload.sub || payload.sub.length > 200) throw new Error("UNAUTHORIZED");
+  if (
+    payload.role !== "authenticated" ||
+    payload.banned === true ||
+    !payload.sub ||
+    payload.sub.length > 200
+  )
+    throw new Error("UNAUTHORIZED");
   return payload.sub;
 }
 export default {

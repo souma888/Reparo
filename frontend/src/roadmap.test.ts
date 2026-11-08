@@ -1,3 +1,4 @@
+import { technicianBrief } from "./workshop";
 import benchmark from "../../evals/retrieval.json";
 import { expect, it, vi, afterEach } from "vitest";
 import { repairDecision, recurringCases } from "./care-tools";
@@ -134,4 +135,30 @@ it("retrieval beats the no-retrieval baseline on a declared synthetic citation b
     }
   }
   expect(hits).toBe(3); // Rules-only baseline provides zero document citations, retrieval provides 3/3 supported references.
+});
+
+it("print brief preserves the safety stop and approved actions despite very long multiline notes", () => {
+  const input = requestSchema.parse({
+    appliance: "washer",
+    symptom: "Will not start",
+    notes: "long note\n".repeat(200),
+    safety: "yes",
+    consent: true,
+  });
+  const result = finalize(
+    input,
+    {
+      hazardDetected: true,
+      observations: [],
+      hypotheses: [],
+      questions: [],
+      unknowns: [],
+    },
+    "test",
+  );
+  const brief = technicianBrief(input, result);
+  expect(brief).toContain("STOP — do not use");
+  expect(brief).toContain("APPROVED NEXT STEPS");
+  expect(brief).toContain("local emergency");
+  expect(brief.length).toBeLessThan(3500);
 });

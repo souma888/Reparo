@@ -1,5 +1,5 @@
 import { useState } from "react";
-export function Handoff({ text }: { text: string }) {
+export function Handoff({ text, brief }: { text: string; brief: string }) {
   const [message, setMessage] = useState("");
   async function copy() {
     try {
@@ -30,10 +30,10 @@ export function Handoff({ text }: { text: string }) {
     }
     doc.open();
     doc.write(
-      "<!doctype html><title>Reparo technician summary</title><style>body{font:12px/1.4 sans-serif;margin:18mm}pre{white-space:pre-wrap;font:inherit}h1{font-size:20px}@page{size:A4;margin:0}</style><h1>Reparo · Technician handoff</h1><pre></pre>",
+      "<!doctype html><title>Reparo technician summary</title><style>body{font:10px/1.25 sans-serif;margin:15mm}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}h1{font-size:20px}@page{size:A4;margin:0}</style><h1>Reparo · Technician handoff</h1><pre></pre>",
     );
     doc.close();
-    doc.querySelector("pre")!.textContent = text;
+    doc.querySelector("pre")!.textContent = brief;
     frame.contentWindow?.focus();
     frame.contentWindow?.print();
     setTimeout(() => frame.remove(), 60000);
