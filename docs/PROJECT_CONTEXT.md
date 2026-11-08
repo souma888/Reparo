@@ -45,4 +45,4 @@ Appliance selection → immediate hazard triage → structured symptom questions
 Exact MVP appliance list, dataset licensing and coverage, inference architecture, privacy/retention policy, hosting budget, authentication timing, regional safety guidance, and repository license.
 
 ## Status
-All features are planned; implementation has not started.
+The responsive frontend and a browser-only guided preview are implemented. The guide supports appliance selection, mandatory safety triage, symptom intake, general external observations, and a downloadable summary. It does not make diagnoses. Backend services, reviewed diagnostic trees, ML, retrieval, accounts, and media uploads remain planned.

@@ -5,8 +5,10 @@ No deadlines are committed.
 ## Phase 0 — Foundation
 - [x] Establish vision, scope, architecture and documentation.
 - [ ] Choose license and final MVP appliance categories.
-- [ ] Scaffold React/TypeScript and FastAPI apps.
-- [ ] Configure linting, tests and GitHub Actions.
+- [x] Scaffold React/TypeScript frontend with a responsive landing page and browser-only guided preview.
+- [ ] Scaffold FastAPI backend.
+- [x] Add frontend TypeScript build checks, safety-gate regression tests, and GitHub Actions.
+- [ ] Configure linting and backend tests.
 
 ## Phase 1 — Safe text-first MVP
 - [ ] Design symptom and hazard taxonomies.

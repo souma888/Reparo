@@ -4,7 +4,7 @@
 
 Reparo is a planned full-stack application that helps people understand appliance faults through structured symptom reports, optional photos, sound recordings, and eventually video. Its goal is to provide **evidence-backed, safety-aware diagnostic guidance** rather than confident guesses.
 
-> **Status:** Documentation and repository initialization. No application, trained model, or diagnostic service is implemented yet.
+> **Status:** A responsive React frontend and browser-only guided preview are implemented. The backend, trained models, and diagnostic service are not implemented yet.
 
 ## Why Reparo?
 When an appliance fails, users may not know what to check, whether the issue is safe to investigate, or when professional help is necessary. Reparo aims to turn symptoms and available evidence into understandable troubleshooting steps, uncertainty estimates, and clear escalation guidance.
@@ -21,8 +21,8 @@ When an appliance fails, users may not know what to check, whether the issue is 
 
 **Later:** image analysis, audio classification, multimodal fusion, retrieval from verified manuals, user accounts, repair histories, technician handoff, and carefully scoped video support.
 
-## Proposed technology (not yet installed)
-- Frontend: React, TypeScript, Vite
+## Technology
+- Frontend (implemented): React, TypeScript, Vite
 - Backend: Python, FastAPI, Pydantic
 - Database: PostgreSQL when accounts and saved sessions are introduced
 - ML: PyTorch/scikit-learn or hosted inference where validated and cost-effective
@@ -46,7 +46,7 @@ When an appliance fails, users may not know what to check, whether the issue is 
 Reparo/
 ├── .github/             # Issue and pull-request templates
 ├── docs/                # Product and technical plans
-├── frontend/            # Future web client
+├── frontend/            # Web client and guided preview
 ├── backend/             # Future API, reasoning and ML services
 ├── tests/               # Future integration and evaluation cases
 ├── .env.example
@@ -54,7 +54,20 @@ Reparo/
 ```
 
 ## Getting started
-This is a documentation-first setup. **There is no runnable app or backend yet.** Read [the development plan](docs/DEVELOPMENT.md) for proposed implementation steps.
+Requires Node.js 22.12+ and npm. From the repository root:
+
+```sh
+npm install
+npm run dev
+```
+
+Run `npm test` for safety-gate regression cases and `npm run build` for TypeScript checks and a production build. No environment variables or backend are required for the frontend preview. Answers remain in memory until the guide is closed; users can download a text summary.
+
+### Deploy on Vercel
+
+Import `souma888/Reparo`, select the `main` branch, and leave **Root Directory at the repository root**. The tracked `vercel.json` configures Vite, `npm run build`, and `frontend/dist`. No environment variables are needed. The deployment is a static frontend; AI diagnosis, accounts, uploads, and saved histories are not available yet.
+
+See [frontend setup](frontend/README.md) and [the development plan](docs/DEVELOPMENT.md) for details.
 
 ## Important safety notice
 Reparo must never encourage users to open energized devices, bypass interlocks, handle refrigerants, test exposed mains wiring, or perform other hazardous repairs. Suspected gas leaks, smoke, fire, electric shock, or other emergencies require immediate cessation of troubleshooting and appropriate emergency/professional assistance. Guidance is educational and does not replace a qualified technician.

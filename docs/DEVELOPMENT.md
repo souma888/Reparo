@@ -1,7 +1,9 @@
 # Development Guide
 
 ## Current status
-Documentation only. No runnable frontend, backend, package manifests or model weights are present yet.
+A React/TypeScript/Vite frontend is runnable, with a browser-only guided preview and safety-gate regression tests. The backend, diagnostic service, and model weights are not present yet.
+
+From the repository root, run `npm install`, `npm run dev`, `npm test`, and `npm run build`. Vercel configuration is tracked at the root; import the repository without changing its Root Directory. No frontend environment variables are required.
 
 ## Proposed stack
 - Node.js LTS, React + TypeScript + Vite
