@@ -82,6 +82,8 @@ export function streamAnalysis(input: AnalysisRequest): Response {
         });
         const { photo, ...evidence } = input;
         const generation = streamText({
+          // The SDK default logs provider errors, which may contain request evidence.
+          onError: () => {},
           model: google(freeModel()),
           system,
           output: Output.object({ schema: aiSchema }),
