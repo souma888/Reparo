@@ -1,4 +1,4 @@
-import { analyze } from "../server/analyze";
+import { analyze } from "../server/analyze.js";
 import { ZodError } from "zod";
 
 // A bounded per-instance abuse guard. Configure a Vercel Firewall rate-limit
